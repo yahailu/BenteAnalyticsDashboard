@@ -457,22 +457,24 @@ function runInvestigation(){
   show('inv-results',true);
 
   // Score every record by how many filters it satisfies
+  const venueCat=venue?allData.find(x=>x.venue_name===venue)?.venue_category:null;
   const scored=allData.map(d=>{
-    let score=0;
-    if(venue&&d.venue_name===venue)score+=3;
-    if(day&&d.day_of_week===day)score+=2;
-    if(hour!==null&&Math.abs(d.hour_of_day-hour)<=2)score+=2; // ±2h window
-    if(weather&&d.weather_condition===weather)score+=1;
-    // bonus for same category as selected venue
-    if(venue){
-      const cat=allData.find(x=>x.venue_name===venue)?.venue_category;
-      if(cat&&d.venue_category===cat)score+=1;
+    let score=0,reasons=[];
+    if(venue&&d.venue_name===venue){score+=4;reasons.push('Same venue');}
+    else if(venueCat&&d.venue_category===venueCat){score+=1;reasons.push('Same category');}
+    if(day&&d.day_of_week===day){score+=3;reasons.push('Same day');}
+    if(hour!==null){
+      const diff=Math.abs(d.hour_of_day-hour);
+      if(diff===0){score+=3;reasons.push('Exact hour');}
+      else if(diff<=2){score+=2;reasons.push('\u00b12h window');}
+      else if(diff<=4){score+=1;reasons.push('\u00b14h window');}
     }
-    return{...d,_score:score};
+    if(weather&&d.weather_condition===weather){score+=1;reasons.push('Same weather');}
+    return{...d,_score:score,_reasons:reasons.join(', ')};
   }).filter(d=>d._score>0).sort((a,b)=>b._score-a._score);
 
-  // Top fallback records (up to 80)
-  const fallback=scored.slice(0,80);
+  // Top fallback records (up to 100)
+  const fallback=scored.slice(0,100);
 
   // Nearby venue activity: records from same category, different venues
   const cat=venue?allData.find(x=>x.venue_name===venue)?.venue_category:null;
@@ -662,9 +664,11 @@ function renderInvTimeline(data){
       scales:{x:{display:false},y:sy('Density',0,105)}}});
 }
 
-function renderInvTable(results,filters={}){  const isFallback=filters.fallback||false;
+function renderInvTable(results,filters={}){
+  const isFallback=filters.fallback||false;
   set('inv-table-count',isFallback?'('+results.length.toLocaleString()+' closest matches)':'('+results.length.toLocaleString()+' records)');
   const ft=document.getElementById('inv-fallback-tag'); if(ft) ft.style.display=isFallback?'inline':'none';
+  const matchTh=document.getElementById('inv-th-match'); if(matchTh) matchTh.style.display='none';
   document.getElementById('inv-tbody').innerHTML=results.map(d=>{
     const dp=d.crowd_density>=70?'dp-high':d.crowd_density>=40?'dp-med':'dp-low';
     const spike=d.crowd_density>=75;
@@ -674,7 +678,7 @@ function renderInvTable(results,filters={}){  const isFallback=filters.fallback|
       <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-weight:600;">${d.venue_name}</td>
       <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t2);">${d.venue_category}</td>
       <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-family:monospace;font-size:11px;">${d.timestamp}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);"><span class="${dp}">${d.crowd_density}${spike?' ⚑':''}</span></td>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);"><span class="${dp}">${d.crowd_density}${spike?' ⧗':''}</span></td>
       <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-family:monospace;">${d.avg_dwell_minutes}m</td>
       <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--t2);">${d.day_of_week}</td>
       <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-family:monospace;color:var(--t3);">${fmtH(d.hour_of_day)}</td>
