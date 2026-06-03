@@ -107,8 +107,7 @@ Bente platform: https://menu.getbente.com/
 
 CONTACT
 -------
-Name  : [Your Name / Team Name]
-Email : [Your Email]
-Date  : [Delivery Date]
-
+Name  : [yamrot Hailu]
+Email : [yamrot.a.hailu@gmail.com]
+Date  : [6/3/2026]
 ================================================================================
