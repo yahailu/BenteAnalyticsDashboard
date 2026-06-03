@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Bente Analytics — Operational Intelligence</title>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Bente Analytics — Public Safety & Operational Intelligence</title>
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -13,349 +12,312 @@
 </head>
 <body>
 
-<!-- ═══ TOP NAV ═══ -->
-<header id="topnav">
-  <div class="nav-brand" onclick="showPage('home')" title="Home">
-    <div class="nav-logo">B</div>
-    <div class="nav-brand-text">Bente <span>Analytics</span></div>
-  </div>
-  <nav class="nav-tabs">
-    <button class="nav-tab" id="nt-home"           onclick="showPage('home')">⌂ Home</button>
-    <button class="nav-tab" id="nt-monitoring"     onclick="showPage('monitoring')">Monitoring</button>
-    <button class="nav-tab" id="nt-forecasting"    onclick="showPage('forecasting')">Forecasting</button>
-    <button class="nav-tab" id="nt-investigation"  onclick="showPage('investigation')">Investigation</button>
-  </nav>
-  <div class="nav-right">
-    <div class="nav-status"><div class="status-dot"></div><span id="nav-count">— RECORDS</span></div>
-  </div>
-</header>
-
-<!-- ═══ SIDEBAR ═══ -->
+<!-- SIDEBAR -->
 <aside id="sidebar">
-  <div class="sb-section">Navigation</div>
-  <div class="sb-item" id="sb-home"          onclick="showPage('home')">          <span>⌂</span> Home</div>
-
-  <div class="sb-section">Modules</div>
-  <div class="sb-item" id="sb-monitoring"    onclick="showPage('monitoring')">    <span>⬡</span> Overview</div>
-  <div class="sb-item" id="sb-heatmap"       onclick="showPage('monitoring')">    <span>◈</span> Heatmap</div>
-  <div class="sb-item" id="sb-activity"      onclick="showPage('forecasting')">   <span>↗</span> Activity</div>
-  <div class="sb-item" id="sb-venues"        onclick="showPage('forecasting')">   <span>📍</span> Venues</div>
-
-  <div class="sb-section">Operations</div>
-  <div class="sb-item" id="sb-alerts">                                             <span>🔔</span> Alerts <span class="sb-badge" id="alert-count">3</span></div>
-  <div class="sb-item" id="sb-investigation" onclick="showPage('investigation')"> <span>⊘</span> Investigation</div>
-  <div class="sb-item" id="sb-settings">                                           <span>⚙</span> Settings</div>
-
-  <div class="sb-footer">
-    <div style="font-size:10px;color:#4b5563;margin-bottom:4px;">Last updated<br/><span id="sb-time" style="color:#94a3b8;">—</span></div>
-    <div style="font-size:11px;color:#10b981;">● System Online</div>
-    <div class="sb-item" style="margin-top:10px;" id="sb-export"><span>⬇</span> Export Reports</div>
+  <div class="sb-logo" onclick="showPage('home')">B</div>
+  <div class="sb-icon active" id="sbi-home"          onclick="showPage('home')">          ⌂<span class="sb-tooltip">Home</span></div>
+  <div class="sb-icon"        id="sbi-heatmap"       onclick="showPage('heatmap')">       ◉<span class="sb-tooltip">Situation Map</span></div>
+  <div class="sb-icon"        id="sbi-trends"        onclick="showPage('trends')">        ≋<span class="sb-tooltip">Trends & Forecast</span></div>
+  <div class="sb-sep"></div>
+  <div class="sb-icon"        id="sbi-investigation" onclick="showPage('investigation')"> ⊘<span class="sb-tooltip">Investigation</span></div>
+  <div class="sb-bottom">
+    <div class="sb-icon">⚙<span class="sb-tooltip">Settings</span></div>
   </div>
 </aside>
 
-<!-- ═══ MAIN ═══ -->
+<!-- TOP NAV -->
+<header id="topnav">
+  <div class="nav-brand" onclick="showPage('home')">
+    <div class="nav-title">BENTE <span class="dot">●</span> <span class="ana">ANALYTICS</span></div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab" id="nt-home"          onclick="showPage('home')">          ⌂ HOME</button>
+    <button class="nav-tab" id="nt-heatmap"       onclick="showPage('heatmap')">       ◉ SITUATION MAP</button>
+    <button class="nav-tab" id="nt-trends"        onclick="showPage('trends')">        ≋ TRENDS & FORECAST</button>
+    <button class="nav-tab" id="nt-investigation" onclick="showPage('investigation')"> ⊘ INVESTIGATION</button>
+  </nav>
+  <div class="nav-right">
+
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <div class="nav-clock" id="nav-clock">00:00:00</div>
+  </div>
+</header>
+
 <main id="main">
 
-<!-- ─── HOME ─── -->
+<!-- ══ HOME ══ -->
 <section id="page-home" class="page">
-  <div class="home-inner">
-    <div style="margin-bottom:28px;">
-      <h1 style="font-size:22px;font-weight:700;margin-bottom:6px;">Bente Analytics — Operational Intelligence</h1>
-      <p style="color:#94a3b8;font-size:13px;">CompStat 360-style crowd monitoring, hotspot analysis, predictive forecasting, and incident investigation.</p>
-      <div style="display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:7px 14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px;font-size:12px;color:#10b981;">
-        ▸ &nbsp;Supporting hospitality partners and public safety teams with actionable venue insights
-      </div>
+  <div class="home-wrap">
+    <div style="margin-bottom:24px;">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--cyan);text-transform:uppercase;margin-bottom:8px;">● Bente Analytics — Public Safety & Operational Intelligence Platform</div>
+      <h1 style="font-family:var(--disp);font-size:28px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;">Crowd Monitoring & Heatmap Dashboard</h1>
+      <p style="color:var(--t2);font-size:13px;max-width:700px;line-height:1.6;">A CompStat 360-style operational intelligence system for Law Enforcement and Hospitality Partners. Real-time crowd monitoring, hotspot detection, predictive deployment forecasting, and incident investigation.</p>
     </div>
 
-    <div class="home-cards">
-      <div class="hcard" onclick="showPage('monitoring')" style="--hc:#3b82f6;">
-        <div class="hcard-num">MODULE 01</div>
-        <div class="hcard-icon">⬡</div>
-        <div class="hcard-title">Monitoring Overview</div>
-        <div class="hcard-desc">Live crowd hotspot map, venue KPIs, density heatmap, and real-time activity signals for resource allocation.</div>
+    <div class="home-cards" style="grid-template-columns:repeat(3,1fr);">
+      <div class="hcard" onclick="showPage('heatmap')" style="--hc:var(--cyan)">
+        <div class="hcard-num">MODULE 01</div><div class="hcard-icon">◉</div>
+        <div class="hcard-title">Situation Map</div>
+        <div class="hcard-desc">Live crowd density heatmap with venue markers, KPIs, risk levels, patrol zones, active alerts, and real-time incident feed.</div>
         <div class="hcard-arrow">↗</div>
       </div>
-      <div class="hcard" onclick="showPage('forecasting')" style="--hc:#10b981;">
-        <div class="hcard-num">MODULE 02</div>
-        <div class="hcard-icon">↗</div>
-        <div class="hcard-title">Crowd Trends & Forecasting</div>
-        <div class="hcard-desc">Day × hour matrices, weekday vs weekend patterns, weather impact, and predictive crowd density modeling.</div>
+      <div class="hcard" onclick="showPage('trends')" style="--hc:var(--amber)">
+        <div class="hcard-num">MODULE 02</div><div class="hcard-icon">≋</div>
+        <div class="hcard-title">Trends & Forecast</div>
+        <div class="hcard-desc">Day × hour activity matrices, peak periods, weather impact, weekday vs weekend patterns, and 24-hour predictive deployment forecast.</div>
         <div class="hcard-arrow">↗</div>
       </div>
-      <div class="hcard" onclick="showPage('investigation')" style="--hc:#ef4444;">
-        <div class="hcard-num">MODULE 03</div>
-        <div class="hcard-icon">⊘</div>
-        <div class="hcard-title">Incident Investigation</div>
-        <div class="hcard-desc">Venue presence logs, crowd condition summaries, risk assessment, and operational intelligence for authorized partners.</div>
+      <div class="hcard" onclick="showPage('investigation')" style="--hc:var(--red)">
+        <div class="hcard-num">MODULE 03</div><div class="hcard-icon">⊘</div>
+        <div class="hcard-title">Investigation</div>
+        <div class="hcard-desc">Venue presence lookup — identify who was at a location, when, crowd conditions, risk level, officer action, and incident flags.</div>
         <div class="hcard-arrow">↗</div>
       </div>
     </div>
 
     <div class="home-stats">
-      <div class="hstat"><div class="hstat-label">Total Records</div><div class="hstat-val" id="hs-records">1,200</div><div class="hstat-sub">Check-in events</div></div>
-      <div class="hstat"><div class="hstat-label">Venues Monitored</div><div class="hstat-val" id="hs-venues">10</div><div class="hstat-sub">Across all categories</div></div>
-      <div class="hstat"><div class="hstat-label">Date Range</div><div class="hstat-val" style="font-size:18px;">90 Days</div><div class="hstat-sub">Mar – Jun 2024</div></div>
-      <div class="hstat"><div class="hstat-label">Categories</div><div class="hstat-val" id="hs-cats">10</div><div class="hstat-sub">Venue types</div></div>
+      <div class="hstat"><div class="hstat-label">Total Check-ins</div><div class="hstat-val" style="color:var(--cyan);">1,200</div><div class="hstat-sub">Operational records</div></div>
+      <div class="hstat"><div class="hstat-label">Monitored Venues</div><div class="hstat-val" style="color:var(--green);">10</div><div class="hstat-sub">Across 6 patrol zones</div></div>
+      <div class="hstat"><div class="hstat-label">Critical Events</div><div class="hstat-val" style="color:var(--red);" id="hs-critical">—</div><div class="hstat-sub">Density ≥ 85</div></div>
+      <div class="hstat"><div class="hstat-label">High Risk Events</div><div class="hstat-val" style="color:var(--amber);" id="hs-high">—</div><div class="hstat-sub">Density ≥ 70</div></div>
+    </div>
+
+    <div class="home-brief">
+      <strong>Deployment Context:</strong> This platform is designed for pilot deployment with local Police Departments and hospitality partners.
+      Officers can monitor crowd conditions in real time, identify high-density venues requiring patrol attention, investigate specific incidents by venue and time window,
+      and anticipate high-activity periods using the predictive forecast module.
+      <br/><br/>
+      <strong>Data:</strong> 1,200 check-in records across 10 venues in 6 patrol zones — Nightclub, Bar/Lounge, Cafe, Restaurant, Gym, Entertainment, Food Court, Mall, Coworking, and Park.
+      Incident flags are automatically assigned based on crowd density thresholds: <span style="color:var(--red);">CRITICAL ≥85</span> · <span style="color:var(--amber);">HIGH ≥70</span> · <span style="color:var(--cyan);">ELEVATED ≥50</span> · <span style="color:var(--green);">NORMAL &lt;50</span>
     </div>
   </div>
 </section>
 
-<!-- ─── MONITORING ─── -->
-<section id="page-monitoring" class="page">
+<!-- ══ HEATMAP ══ -->
+<section id="page-heatmap" class="page">
+  <div class="hm-layout">
+    <div style="position:relative;">
+      <div id="map"></div>
+      <div style="position:absolute;top:12px;left:12px;z-index:500;background:rgba(5,8,16,.92);backdrop-filter:blur(8px);border:1px solid var(--bdr2);border-radius:5px;padding:6px 12px;font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:.06em;text-transform:uppercase;">◉ LIVE CROWD DENSITY MAP</div>
+      <div style="position:absolute;top:12px;right:12px;z-index:500;display:flex;flex-direction:column;gap:4px;">
+        <button class="btn-ghost" style="font-size:10px;padding:5px 10px;" onclick="filterMapByRisk('ALL')">ALL</button>
+        <button class="btn-ghost" style="font-size:10px;padding:5px 10px;color:var(--red);"    onclick="filterMapByRisk('CRITICAL')">CRITICAL</button>
+        <button class="btn-ghost" style="font-size:10px;padding:5px 10px;color:var(--amber);"  onclick="filterMapByRisk('HIGH')">HIGH</button>
+        <button class="btn-ghost" style="font-size:10px;padding:5px 10px;color:var(--cyan);"   onclick="filterMapByRisk('ELEVATED')">ELEVATED</button>
+      </div>
+      <div style="position:absolute;bottom:12px;left:12px;z-index:500;background:rgba(5,8,16,.92);border:1px solid var(--bdr);border-radius:5px;padding:8px 12px;font-size:10px;color:var(--t2);">
+        Crowd Density
+        <div style="width:110px;height:5px;margin-top:4px;border-radius:2px;background:linear-gradient(90deg,#002244,#003388,var(--cyan),var(--amber),var(--red));"></div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;margin-top:2px;color:var(--t3);"><span>Low</span><span>Critical</span></div>
+      </div>
+    </div>
+    <div class="right-panel">
+      <div class="rp-header">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="rp-title">Active Incidents Feed</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--t2);" id="rp-count"></div>
+        </div>
+        <div class="quick-access-wrap" style="position:relative;width:100%;">
+          <button class="quick-access-btn" onclick="toggleQuickAccess()" id="qa-btn" style="width:100%;justify-content:center;">
+            ⚡ Quick Access — Jump to Venue <span id="qa-arrow" style="font-size:10px;margin-left:4px;">▼</span>
+          </button>
+          <div class="quick-access-dropdown" id="qa-dropdown" style="width:100%;right:auto;left:0;">
+            <div class="qa-header">Select venue to investigate</div>
+            <div id="qa-venue-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="rp-feed" id="rp-feed"></div>
+    </div>
+  </div>
+  <div class="hm-bottom">
+    <div class="hm-bp">
+      <div class="hm-bp-title">ACTIVITY MATRIX <span class="hm-bp-badge">CROWD INDEX</span></div>
+      <div id="hm-mini-matrix" style="overflow-x:auto;"></div>
+    </div>
+    <div class="hm-bp" style="border-left:1px solid var(--bdr);">
+      <div class="hm-bp-title">VENUE DENSITY COMPARISON</div>
+      <div style="height:72px;position:relative;"><canvas id="ch-venue-bar"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TRENDS & FORECAST (merged) ══ -->
+<section id="page-trends" class="page std-page">
   <div class="pg-header">
-    <div><h1 class="pg-title">Monitoring Overview</h1><p class="pg-sub">Real-time crowd monitoring and venue activity overview</p></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <select class="ctrl" id="f-cat"     onchange="applyMonFilters()"><option value="">All Categories</option></select>
-      <select class="ctrl" id="f-date"    onchange="applyMonFilters()"><option value="">All Dates</option><option value="weekend">Weekends</option><option value="weekday">Weekdays</option></select>
-      <select class="ctrl" id="f-hrange"  onchange="applyMonFilters()"><option value="">All Hours</option><option value="morning">Morning (6–12)</option><option value="afternoon">Afternoon (12–18)</option><option value="evening">Evening (18–24)</option><option value="latenight">Late Night (0–6)</option></select>
-      <select class="ctrl" id="f-weather" onchange="applyMonFilters()"><option value="">All Weather</option></select>
-      <button class="btn-ghost" onclick="resetMonFilters()">Reset</button>
+    <div><h1 class="pg-title">Trends & Forecast</h1><p class="pg-sub">Pattern analysis · Peak periods · Predictive deployment model · 24-hour crowd projections</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select class="ctrl" id="tr-cat"  onchange="renderTrends()"><option value="">All Categories</option></select>
+      <select class="ctrl" id="tr-zone" onchange="renderTrends()"><option value="">All Zones</option></select>
+      <select class="ctrl" id="tr-wknd" onchange="renderTrends()"><option value="">All Days</option><option value="0">Weekdays</option><option value="1">Weekends</option></select>
     </div>
   </div>
 
   <!-- KPIs -->
-  <div class="kpi-row">
-    <div class="kpi" style="--kc:#3b82f6;--kb:rgba(59,130,246,0.1)"><div class="kpi-ico">👤</div><div><div class="kpi-lbl">Total Users</div><div class="kpi-val" id="kpi-users">—</div><div class="kpi-sub" id="kpi-users-sub">unique identities</div></div></div>
-    <div class="kpi" style="--kc:#10b981;--kb:rgba(16,185,129,0.1)"><div class="kpi-ico">🏢</div><div><div class="kpi-lbl">Active Venues</div><div class="kpi-val" id="kpi-venues">—</div><div class="kpi-sub">monitored locations</div></div></div>
-    <div class="kpi" style="--kc:#f59e0b;--kb:rgba(245,158,11,0.1)"><div class="kpi-ico">⚡</div><div><div class="kpi-lbl">Avg Crowd Density</div><div class="kpi-val" id="kpi-density">—</div><div class="kpi-sub" id="kpi-density-sub">across records</div></div></div>
-    <div class="kpi" style="--kc:#ef4444;--kb:rgba(239,68,68,0.1)"><div class="kpi-ico">🕐</div><div><div class="kpi-lbl">Peak Activity Hour</div><div class="kpi-val" id="kpi-peak">—</div><div class="kpi-sub" id="kpi-peak-sub">highest volume</div></div></div>
-  </div>
+  <div class="kpi-row" id="tr-kpis"></div>
 
-  <!-- Map row -->
-  <div class="row-3" style="margin-bottom:14px;">
-    <div class="panel" style="padding:0;overflow:hidden;">
-      <div style="padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:center;">
-        <div class="panel-title"><div class="ptdot"></div>Crowd Hotspot Map</div>
-        <span class="panel-action" onclick="mapInstance&&mapInstance.setView([40.712,-74.005],13)">Reset View</span>
-      </div>
-      <div style="position:relative;">
-        <div id="map" style="height:320px;width:100%;"></div>
-        <div style="position:absolute;top:10px;left:10px;z-index:500;background:rgba(10,15,30,0.88);backdrop-filter:blur(8px);border:1px solid rgba(59,130,246,0.35);border-radius:6px;padding:5px 10px;font-size:10px;font-weight:600;letter-spacing:.06em;color:#06b6d4;text-transform:uppercase;">◉ Live Hotspot</div>
-        <div style="position:absolute;bottom:10px;left:10px;z-index:500;background:rgba(10,15,30,0.88);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:7px 12px;font-size:10px;color:#94a3b8;">
-          Crowd Density
-          <div style="width:100px;height:6px;margin-top:4px;border-radius:3px;background:linear-gradient(90deg,#1a3a6b,#3b82f6,#f59e0b,#ef4444);"></div>
-          <div style="display:flex;justify-content:space-between;font-size:9px;margin-top:2px;color:#4b5563;"><span>Low</span><span>High</span></div>
-        </div>
-      </div>
-    </div>
+  <!-- Matrix + Hourly -->
+  <div class="g21">
     <div class="panel">
-      <div class="panel-title"><div class="ptdot" style="background:#06b6d4;"></div>Crowd Density Over Time</div>
-      <div style="height:280px;position:relative;"><canvas id="ch-density-time"></canvas></div>
-    </div>
-    <div class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div class="panel-title"><div class="ptdot" style="background:#10b981;"></div>Top Busiest Venues</div>
-        <span class="panel-action">View All</span>
-      </div>
-      <div id="venue-list"></div>
-    </div>
-  </div>
-
-  <!-- Bottom row -->
-  <div class="row-3">
-    <div class="panel">
-      <div class="panel-title"><div class="ptdot" style="background:#06b6d4;"></div>Peak Activity Periods</div>
-      <div id="peak-list"></div>
-    </div>
-    <div class="panel">
-      <div class="panel-title" style="margin-bottom:14px;"><div class="ptdot" style="background:#f59e0b;"></div>Crowd Density Distribution</div>
-      <div style="display:flex;align-items:center;gap:20px;height:160px;">
-        <div style="width:150px;height:150px;flex-shrink:0;position:relative;"><canvas id="ch-donut"></canvas></div>
-        <div id="donut-stats"></div>
-      </div>
-    </div>
-    <div class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div class="panel-title"><div class="ptdot" style="background:#ef4444;"></div>Recent Alerts</div>
-        <span class="panel-action">View All</span>
-      </div>
-      <div id="alert-list"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ─── FORECASTING ─── -->
-<section id="page-forecasting" class="page">
-  <div class="pg-header">
-    <div><h1 class="pg-title">Crowd Trends & Predictive Forecasting</h1><p class="pg-sub">Behavioral patterns · Temporal analysis · Crowd density projections</p></div>
-    <div style="display:flex;gap:8px;">
-      <select class="ctrl" id="fc-cat"     onchange="renderForecasting()"><option value="">All Categories</option></select>
-      <select class="ctrl" id="fc-weekend" onchange="renderForecasting()"><option value="">All Days</option><option value="0">Weekdays</option><option value="1">Weekends</option></select>
-    </div>
-  </div>
-
-  <div class="kpi-row" id="fc-kpis"></div>
-
-  <div class="row-2-1" style="margin-bottom:14px;">
-    <div class="panel">
-      <div class="panel-title" style="margin-bottom:12px;"><div class="ptdot"></div>Day × Hour Activity Matrix <span style="font-size:10px;color:#4b5563;margin-left:8px;">avg crowd density</span></div>
+      <div class="panel-title" style="margin-bottom:10px;"><div class="ptdot"></div>Day × Hour Crowd Activity Matrix <span style="font-size:9px;color:var(--t3);margin-left:6px;">avg crowd density</span></div>
       <div style="overflow-x:auto;"><table id="hm-matrix" style="border-collapse:collapse;width:100%;"></table></div>
     </div>
     <div class="panel">
-      <div class="panel-title"><div class="ptdot" style="background:#06b6d4;"></div>Avg Crowd Density by Hour</div>
-      <div style="height:230px;position:relative;"><canvas id="ch-fc-hourly"></canvas></div>
+      <div class="panel-title"><div class="ptdot" style="background:var(--cyan);"></div>Avg Crowd Density by Hour</div>
+      <div style="height:240px;position:relative;"><canvas id="ch-tr-hourly"></canvas></div>
     </div>
   </div>
 
-  <div class="row-3" style="margin-bottom:14px;">
+  <!-- Weekday/Weekend + Peak + Weather -->
+  <div class="g3">
     <div class="panel">
-      <div class="panel-title"><div class="ptdot" style="background:#f59e0b;"></div>Weekday vs Weekend</div>
-      <div style="height:190px;position:relative;"><canvas id="ch-fc-wknd"></canvas></div>
+      <div class="panel-title"><div class="ptdot" style="background:var(--amber);"></div>Weekday vs Weekend Patterns</div>
+      <div style="height:190px;position:relative;"><canvas id="ch-tr-wknd"></canvas></div>
     </div>
     <div class="panel">
-      <div class="panel-title"><div class="ptdot" style="background:#10b981;"></div>Peak Activity Periods</div>
-      <div id="fc-peak-list"></div>
+      <div class="panel-title"><div class="ptdot" style="background:var(--green);"></div>Recurring Peak Periods</div>
+      <div id="tr-peak-list"></div>
     </div>
     <div class="panel">
-      <div class="panel-title"><div class="ptdot" style="background:#8b5cf6;"></div>Weather Impact</div>
-      <div style="height:190px;position:relative;"><canvas id="ch-fc-weather"></canvas></div>
+      <div class="panel-title"><div class="ptdot" style="background:var(--purp);"></div>Weather Impact on Crowd Density</div>
+      <div style="height:190px;position:relative;"><canvas id="ch-tr-weather"></canvas></div>
     </div>
   </div>
 
-  <div class="panel">
+  <!-- Zone + Activity -->
+  <div class="g2">
+    <div class="panel">
+      <div class="panel-title"><div class="ptdot" style="background:var(--red);"></div>Critical Events by Patrol Zone</div>
+      <div style="height:190px;position:relative;"><canvas id="ch-tr-zone"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><div class="ptdot" style="background:var(--amber);"></div>Activity Type Distribution</div>
+      <div style="height:190px;position:relative;"><canvas id="ch-tr-activity"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 24h Forecast -->
+  <div class="panel" style="margin-bottom:14px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <div class="panel-title"><div class="ptdot" style="background:#10b981;box-shadow:0 0 6px rgba(16,185,129,0.3);"></div>Predictive Crowd Forecast — Next 24 Hours</div>
-      <span style="font-size:10px;color:#4b5563;font-family:monospace;">Based on historical patterns · Updated on load</span>
+      <div class="panel-title" style="margin:0;"><div class="ptdot" style="background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.3);"></div>24-Hour Deployment Forecast <span style="font-family:var(--mono);font-size:9px;color:var(--t3);margin-left:6px;">resource allocation guide</span></div>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--t3);">Based on historical patterns</span>
     </div>
     <div style="height:190px;position:relative;margin-bottom:14px;"><canvas id="ch-fc-forecast"></canvas></div>
     <div id="fc-venue-cards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;"></div>
   </div>
+
+  <!-- Forecast charts -->
+  <div class="g3">
+    <div class="panel">
+      <div class="panel-title"><div class="ptdot" style="background:var(--amber);"></div>Weekday vs Weekend Forecast</div>
+      <div style="height:180px;position:relative;"><canvas id="ch-fc-wknd"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><div class="ptdot" style="background:var(--red);"></div>Expected Risk Level by Hour</div>
+      <div style="height:180px;position:relative;"><canvas id="ch-fc-risk"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><div class="ptdot" style="background:var(--purp);"></div>Zone Activity Forecast</div>
+      <div style="height:180px;position:relative;"><canvas id="ch-fc-zone"></canvas></div>
+    </div>
+  </div>
 </section>
 
-<!-- ─── INVESTIGATION ─── -->
-<section id="page-investigation" class="page">
+<!-- ══ INVESTIGATION ══ -->
+<section id="page-investigation" class="page std-page">
   <div class="pg-header">
-    <div><h1 class="pg-title">Incident Investigation Center</h1><p class="pg-sub">Venue presence logs · Crowd condition analysis · Operational intelligence</p></div>
+    <div><h1 class="pg-title">Incident Investigation</h1><p class="pg-sub">Venue presence lookup · Crowd conditions · Risk assessment · Authorized Law Enforcement use</p></div>
     <div id="inv-risk-wrap"></div>
   </div>
 
-  <!-- Filters -->
   <div class="filter-bar">
-    <span style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#4b5563;">Investigate:</span>
+    <span style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);">Investigate:</span>
     <select class="ctrl" id="inv-venue"   style="min-width:170px;"><option value="">All Venues</option></select>
     <select class="ctrl" id="inv-day">    <option value="">All Days</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select>
     <select class="ctrl" id="inv-hour">   <option value="">All Hours</option></select>
-    <select class="ctrl" id="inv-weather"><option value="">All Weather</option></select>
-    <button class="btn-primary" onclick="runInvestigation()">▶ Run Investigation</button>
-    <button class="btn-ghost"   onclick="resetInvestigation()">↺ Reset</button>
-    <span style="margin-left:auto;font-size:11px;color:#3b82f6;font-family:monospace;" id="inv-count"></span>
+    <select class="ctrl" id="inv-zone">   <option value="">All Zones</option></select>
+    <select class="ctrl" id="inv-flag">   <option value="">All Risk Levels</option><option value="CRITICAL">Critical Only</option><option value="HIGH">High Only</option><option value="ELEVATED">Elevated Only</option></select>
+    <button class="btn-pri" onclick="runInvestigation()">▶ Run Investigation</button>
+    <button class="btn-ghost" onclick="resetInvestigation()">↺ Reset</button>
+    <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--cyan);" id="inv-count"></span>
   </div>
 
-  <!-- READY STATE — always visible until Run is clicked -->
+  <!-- Ready state -->
   <div id="inv-ready">
     <div class="inv-ready-grid">
-      <div class="inv-rcard"><div style="font-size:28px;margin-bottom:10px;">📍</div><div style="font-weight:700;color:#f1f5f9;margin-bottom:6px;">Select Venue</div><div style="font-size:12px;color:#94a3b8;line-height:1.5;">Choose a specific venue or leave blank to search across all monitored locations</div></div>
-      <div class="inv-rcard"><div style="font-size:28px;margin-bottom:10px;">📅</div><div style="font-weight:700;color:#f1f5f9;margin-bottom:6px;">Filter by Day</div><div style="font-size:12px;color:#94a3b8;line-height:1.5;">Narrow by day of week to identify recurring patterns or investigate a specific incident window</div></div>
-      <div class="inv-rcard"><div style="font-size:28px;margin-bottom:10px;">🕐</div><div style="font-weight:700;color:#f1f5f9;margin-bottom:6px;">Set Time Window</div><div style="font-size:12px;color:#94a3b8;line-height:1.5;">Select an hour to pinpoint a specific time period. Leave blank for full-day analysis</div></div>
-      <div class="inv-rcard"><div style="font-size:28px;margin-bottom:10px;">▶</div><div style="font-weight:700;color:#f1f5f9;margin-bottom:6px;">Run Investigation</div><div style="font-size:12px;color:#94a3b8;line-height:1.5;">System returns presence logs, user IDs, crowd conditions, risk level, and activity context</div></div>
+      <div class="inv-rcard"><div style="font-size:28px;margin-bottom:10px;">📍</div><div style="font-family:var(--disp);font-size:14px;font-weight:700;color:var(--t1);margin-bottom:6px;">Select Venue</div><div style="font-size:12px;color:var(--t2);line-height:1.5;">Choose a specific venue or leave blank to search all monitored locations across all patrol zones</div></div>
+      <div class="inv-rcard"><div style="font-size:28px;margin-bottom:10px;">📅</div><div style="font-family:var(--disp);font-size:14px;font-weight:700;color:var(--t1);margin-bottom:6px;">Day & Time Window</div><div style="font-size:12px;color:var(--t2);line-height:1.5;">Narrow by day of week and specific hour to pinpoint when an incident occurred</div></div>
+      <div class="inv-rcard"><div style="font-size:28px;margin-bottom:10px;">🚨</div><div style="font-family:var(--disp);font-size:14px;font-weight:700;color:var(--t1);margin-bottom:6px;">Filter by Risk Level</div><div style="font-size:12px;color:var(--t2);line-height:1.5;">Target Critical or High-risk events specifically for rapid incident response review</div></div>
+      <div class="inv-rcard"><div style="font-size:28px;margin-bottom:10px;">▶</div><div style="font-family:var(--disp);font-size:14px;font-weight:700;color:var(--t1);margin-bottom:6px;">Run Investigation</div><div style="font-size:12px;color:var(--t2);line-height:1.5;">Returns presence logs, user IDs, crowd conditions, officer action required, and incident flags</div></div>
     </div>
-    <div style="text-align:center;padding:10px 20px;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.15);border-radius:6px;font-size:11px;color:#4b5563;font-family:monospace;">
-      Results include: user IDs · timestamps · crowd density · dwell times · hourly activity · risk assessment · crowd spike detection
-    </div>
-    <div id="inv-noresults" style="display:none;margin-top:14px;" class="panel">
-      <div style="text-align:center;padding:32px 20px;">
-        <div style="font-size:32px;margin-bottom:12px;">⊘</div>
-        <div style="font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:6px;">No Records Found</div>
-        <div style="font-size:12px;color:#94a3b8;">No check-ins match the selected criteria. Try removing the hour or day filter to broaden the search.</div>
-      </div>
-    </div>
+    <div style="text-align:center;padding:10px;background:rgba(0,200,255,.04);border:1px solid var(--bdr);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--t3);">Results include: user IDs · timestamps · crowd density · dwell times · incident flags · officer actions · patrol zone · activity type</div>
+    <div id="inv-noresults" style="display:none;margin-top:14px;" class="panel"><div style="text-align:center;padding:32px 20px;"><div style="font-size:32px;margin-bottom:12px;">⊘</div><div style="font-family:var(--disp);font-size:16px;font-weight:700;margin-bottom:6px;">No Records Found</div><div style="font-size:12px;color:var(--t2);">No records match the selected criteria. Try removing the hour or day filter to broaden the search.</div></div></div>
   </div>
 
-  <!-- RESULTS STATE — hidden until Run is clicked -->
+  <!-- Results -->
   <div id="inv-results" style="display:none;">
-
-    <!-- 4 KPI cards -->
     <div class="kpi-row" id="inv-kpi-row"></div>
-
-    <!-- Summary + Insights -->
-    <div class="row-2-1" style="margin-bottom:14px;">
+    <div class="g21" style="margin-bottom:14px;">
       <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="panel-title"><div class="ptdot"></div>Operational Summary</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="panel-title" style="margin:0"><div class="ptdot"></div>Operational Summary</div>
           <div id="inv-risk-inner"></div>
         </div>
         <div id="inv-summary"></div>
       </div>
       <div class="panel">
-        <div class="panel-title" style="margin-bottom:12px;"><div class="ptdot" style="background:#f59e0b;"></div>Activity Insights</div>
+        <div class="panel-title" style="margin-bottom:10px;"><div class="ptdot" style="background:var(--amber);"></div>Officer Intelligence</div>
         <div id="inv-insights"></div>
       </div>
     </div>
-
-    <!-- Charts row -->
     <div style="display:grid;grid-template-columns:1.4fr 0.8fr 0.8fr;gap:14px;margin-bottom:14px;">
       <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div class="panel-title"><div class="ptdot"></div>Hourly Activity Pattern</div>
-          <span id="inv-hour-sub" style="font-size:10px;color:#4b5563;"></span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div class="panel-title" style="margin:0"><div class="ptdot"></div>Hourly Activity Pattern</div>
+          <span id="inv-hour-sub" style="font-size:10px;color:var(--t3);font-family:var(--mono);"></span>
         </div>
         <div style="height:180px;position:relative;"><canvas id="inv-ch-hour"></canvas></div>
       </div>
       <div class="panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <div class="panel-title" style="align-self:flex-start;margin-bottom:12px;width:100%;"><div class="ptdot" style="background:#ef4444;"></div>Density Breakdown</div>
-        <div style="width:130px;height:130px;position:relative;"><canvas id="inv-ch-dens-donut"></canvas></div>
-        <div id="inv-dens-legend" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px;"></div>
+        <div class="panel-title" style="align-self:flex-start;margin-bottom:10px;width:100%;"><div class="ptdot" style="background:var(--red);"></div>Risk Level Split</div>
+        <div style="width:120px;height:120px;position:relative;"><canvas id="inv-ch-dens-donut"></canvas></div>
+        <div id="inv-dens-legend" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px;"></div>
       </div>
       <div class="panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <div class="panel-title" style="align-self:flex-start;margin-bottom:12px;width:100%;"><div class="ptdot" style="background:#06b6d4;"></div>Dwell Distribution</div>
-        <div style="width:130px;height:130px;position:relative;"><canvas id="inv-ch-dwell"></canvas></div>
-        <div id="inv-dwell-legend" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px;"></div>
+        <div class="panel-title" style="align-self:flex-start;margin-bottom:10px;width:100%;"><div class="ptdot" style="background:var(--cyan);"></div>Dwell Time Split</div>
+        <div style="width:120px;height:120px;position:relative;"><canvas id="inv-ch-dwell"></canvas></div>
+        <div id="inv-dwell-legend" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px;"></div>
       </div>
     </div>
-
-    <!-- Timeline -->
     <div class="panel" style="margin-bottom:14px;">
-      <div class="panel-title" style="margin-bottom:12px;"><div class="ptdot" style="background:#ef4444;"></div>Crowd Density Timeline <span style="font-size:10px;color:#4b5563;margin-left:6px;">spike threshold: 75</span></div>
-      <div style="height:150px;position:relative;"><canvas id="inv-ch-timeline"></canvas></div>
+      <div class="panel-title" style="margin-bottom:10px;"><div class="ptdot" style="background:var(--red);"></div>Crowd Density Timeline <span style="font-size:9px;color:var(--t3);margin-left:6px;">⚑ marks critical spikes ≥85</span></div>
+      <div style="height:140px;position:relative;"><canvas id="inv-ch-timeline"></canvas></div>
     </div>
-
-    <!-- Presence Log -->
     <div class="panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div class="panel-title"><div class="ptdot" style="background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,0.3);"></div>Presence Log <span id="inv-table-count" style="font-size:10px;color:#4b5563;font-weight:400;margin-left:6px;font-family:monospace;"></span><span id="inv-fallback-tag" style="display:none;margin-left:8px;font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:2px 8px;background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.25);border-radius:4px;">Related Records</span></div>
-        <span style="font-size:11px;color:#4b5563;font-family:monospace;">⚑ = density spike</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="panel-title" style="margin:0"><div class="ptdot" style="background:var(--red);box-shadow:0 0 6px rgba(255,51,85,.3);"></div>Presence Log <span id="inv-table-count" style="font-family:var(--mono);font-size:9px;color:var(--t3);font-weight:400;margin-left:6px;"></span></div>
+        <span id="inv-fallback-tag" style="display:none;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;background:rgba(255,170,0,.1);color:var(--amber);border:1px solid rgba(255,170,0,.25);border-radius:3px;">Related Records</span>
       </div>
-      <div style="overflow:auto;max-height:320px;border:1px solid rgba(255,255,255,0.07);border-radius:8px;">
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-          <thead>
-            <tr>
-              <th class="th">Check-in ID</th><th class="th">User ID</th><th class="th">Venue</th>
-              <th class="th">Category</th><th class="th">Timestamp</th><th class="th">Density</th>
-              <th class="th">Dwell</th><th class="th">Day</th><th class="th">Hour</th><th class="th">Weather</th>
-            </tr>
-          </thead>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th>Check-in ID</th><th>User ID</th><th>Venue</th><th>Category</th>
+            <th>Timestamp</th><th>Risk Level</th><th>Density</th><th>Dwell</th>
+            <th>Day</th><th>Hour</th><th>Zone</th><th>Activity</th><th>Officer Action</th><th>Weather</th>
+          </tr></thead>
           <tbody id="inv-tbody"></tbody>
         </table>
       </div>
     </div>
-
-  <!-- FALLBACK SECTION — injected when no exact match -->
-  <div id="inv-fallback-section" style="display:none;">
-
-    <!-- No-match banner -->
-    <div id="inv-fallback-banner" class="panel" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04);margin-bottom:14px;"></div>
-
-    <!-- Nearby venue activity + recent patterns -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-      <div class="panel">
-        <div class="panel-title" style="margin-bottom:12px;">
-          <div class="ptdot" style="background:#10b981;"></div>Nearby Venue Activity
-          <span style="font-size:10px;color:#4b5563;margin-left:6px;">same category</span>
-        </div>
-        <div id="inv-nearby-activity"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-title" style="margin-bottom:12px;">
-          <div class="ptdot" style="background:#8b5cf6;"></div>Recent Crowd Patterns
-          <span style="font-size:10px;color:#4b5563;margin-left:6px;">related activity</span>
-        </div>
-        <div id="inv-recent-patterns"></div>
+    <!-- Fallback -->
+    <div id="inv-fallback-section" style="display:none;">
+      <div id="inv-fallback-banner" style="background:rgba(255,170,0,.04);border:1px solid rgba(255,170,0,.2);border-radius:8px;padding:14px 16px;margin-top:14px;"></div>
+      <div class="g2" style="margin-top:14px;">
+        <div class="panel"><div class="panel-title" style="margin-bottom:10px;"><div class="ptdot" style="background:var(--green);"></div>Nearby Venue Activity</div><div id="inv-nearby-activity"></div></div>
+        <div class="panel"><div class="panel-title" style="margin-bottom:10px;"><div class="ptdot" style="background:var(--purp);"></div>Related Crowd Patterns</div><div id="inv-recent-patterns"></div></div>
       </div>
     </div>
-
-  </div><!-- /inv-fallback-section -->
-
-  </div><!-- /inv-results -->
+  </div>
 </section>
 
 </main>
