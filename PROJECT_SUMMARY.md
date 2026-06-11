@@ -110,7 +110,7 @@ Features include:
 | Patrol Zones        | 10       |
 | Venue Categories    | 12       |
 | Counties            | 3        |
-| Cities              | 10       |
+| Cities              | 9        |
 | Data Columns        | 35       |
 | Historical Coverage | 6 Months |
 
