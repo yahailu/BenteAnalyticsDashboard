@@ -27,7 +27,7 @@ function initDashboard(){
   filteredCmd = [...allData];
   populateDropdowns();
   buildOpsSearch();
-  showPage('sitrep');
+  showPage('welcome');
   renderSitrep();
 }
 
@@ -51,6 +51,9 @@ function showPage(name){
   if(name==='trends')       renderTrends();
   if(name==='investigation')initInvestigation();
   if(name==='sitrep')       {if(allData.length)renderSitrep();}
+  if(name==='welcome')      {if(allData.length)renderWelcome();}
+  if(name==='events')       {if(allData.length)renderEvents();}
+  if(name==='ai')           {if(allData.length)initAiAgent();}
 }
 
 /* ─── DROPDOWNS ─── */
@@ -60,6 +63,11 @@ function populateDropdowns(){
   const venues=[...new Set(allData.map(d=>d.venue_name))].sort();
   const hours =[...new Set(allData.map(d=>d.hour_of_day))].sort((a,b)=>a-b);
   ['cmd-zone','wl-zone','tr-zone','fc-zone','sr-zone'].forEach(id=>addO(id,zones));
+  const states=[...new Set(allData.map(d=>d.state))].sort();
+  const counties=[...new Set(allData.map(d=>d.county))].sort();
+  const cities=[...new Set(allData.map(d=>d.city))].sort();
+  ['sr-county','inv-county','ev-county'].forEach(id=>addO(id,counties));
+  ['sr-city','inv-city'].forEach(id=>addO(id,cities));
   ['wl-cat','tr-cat','sr-cat'].forEach(id=>addO(id,cats));
   addO('inv-venue',venues);addO('inv-zone',zones);
   hours.forEach(h=>{document.getElementById('inv-hour')?.add(new Option(fmtH(h),h));});
@@ -110,19 +118,23 @@ function crowdLevel(avgD){
   return{label:'MODERATE',col:'#00ff88'};
 }
 
-/* ════════ SITUATION REPORT (CompStat 360) ════════ */
+/* ════════ SITUATION REPORT (Public Safety Intelligence) ════════ */
+function resetSrCounty(){
+  const co=document.getElementById('sr-county');if(co)co.value='';
+  const ci=document.getElementById('sr-city');if(ci)ci.value='';
+}
+
 function resetSitrep(){
-  ['sr-zone','sr-cat','sr-flag'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  // Populate dropdowns if empty
-  const zones=[...new Set(allData.map(d=>d.patrol_zone))].sort();
-  const cats=[...new Set(allData.map(d=>d.venue_category))].sort();
-  addO('sr-zone',zones);addO('sr-cat',cats);
+  ['sr-county','sr-city','sr-zone','sr-cat','sr-flag'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   renderSitrep();
 }
 
 function renderSitrep(){
   const zone=v('sr-zone'),cat=v('sr-cat'),flag=v('sr-flag');
+  const county=v('sr-county'),city=v('sr-city');
   const data=allData.filter(d=>{
+    if(county&&d.county!==county)return false;
+    if(city&&d.city!==city)return false;
     if(zone&&d.patrol_zone!==zone)return false;
     if(cat&&d.venue_category!==cat)return false;
     if(flag&&d.incident_flag!==flag)return false;
@@ -321,7 +333,7 @@ function resetMatrixTitle(){
 
 
 /* ════════ COMMAND CENTER ════════ */
-function resetSitrep(){['cmd-zone','cmd-flag','cmd-hrange'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});filteredCmd=[...allData];renderSitrep();}
+// resetSitrep defined above
 
 
 function renderOfficerActionSummary(data){
@@ -997,9 +1009,12 @@ function initInvestigation(){
 
 function runInvestigation(){
   const venue=v('inv-venue'),day=v('inv-day'),zone=v('inv-zone'),flag=v('inv-flag');
+  const iCounty=v('inv-county'),iCity=v('inv-city');
   const hourRaw=document.getElementById('inv-hour')?.value;
   const hour=(hourRaw!==''&&hourRaw!=null)?+hourRaw:null;
   const exact=allData.filter(d=>{
+    if(iCounty&&d.county!==iCounty)return false;
+    if(iCity&&d.city!==iCity)return false;
     if(venue&&d.venue_name!==venue)return false;
     if(day&&d.day_of_week!==day)return false;
     if(hour!==null&&d.hour_of_day!==hour)return false;
@@ -1016,22 +1031,27 @@ function runInvestigation(){
   set('inv-count','0 exact · showing related');
   sh('inv-ready',false);sh('inv-noresults',false);sh('inv-results',true);
   const venueCat=venue?allData.find(x=>x.venue_name===venue)?.venue_category:null;
-  const scored=allData.map(d=>{
+  const pool=flag?allData.filter(d=>d.incident_flag===flag):allData;
+  if(!pool.length){
+    set('inv-count','0 exact · 0 related');
+    sh('inv-results',false);sh('inv-noresults',true);
+    return;
+  }
+  const scored=pool.map(d=>{
     let score=0;
     if(venue&&d.venue_name===venue)score+=10;
     else if(venueCat&&d.venue_category===venueCat)score+=3;
     if(day&&d.day_of_week===day)score+=4;
     if(hour!==null){const diff=Math.abs(d.hour_of_day-hour);if(diff===0)score+=5;else if(diff<=1)score+=3;else if(diff<=3)score+=1;}
     if(zone&&d.patrol_zone===zone)score+=2;
-    if(flag&&d.incident_flag===flag)score+=3;
     return{...d,_score:score};
-  }).filter(d=>(venue&&d.venue_name===venue)||(venueCat&&d.venue_category===venueCat&&day&&d.day_of_week===day)||(!venue&&!venueCat&&d._score>0)).sort((a,b)=>b._score-a._score).slice(0,60);
-  const nearbyVenues=venueCat?[...new Set(allData.filter(d=>d.venue_category===venueCat&&d.venue_name!==venue).map(d=>d.venue_name))].slice(0,5):[];
+  }).filter(d=>(venue&&d.venue_name===venue)||(venueCat&&d.venue_category===venueCat&&day&&d.day_of_week===day)||(flag&&d._score===0)||(!venue&&!venueCat&&d._score>0)).sort((a,b)=>b._score-a._score).slice(0,60);
+  const nearbyVenues=venueCat?[...new Set(pool.filter(d=>d.venue_category===venueCat&&d.venue_name!==venue).map(d=>d.venue_name))].slice(0,5):[];
   renderInvAll(scored,{venue,day,hour,zone,flag,fallback:true,nearbyVenues,originalFilters:{venue,day,hour,zone,flag}});
 }
 
 function resetInvestigation(){
-  ['inv-venue','inv-day','inv-hour','inv-zone','inv-flag'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['inv-county','inv-city','inv-venue','inv-day','inv-hour','inv-zone','inv-flag'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   set('inv-count','');sh('inv-ready',true);sh('inv-results',false);sh('inv-noresults',false);
   const fs=document.getElementById('inv-fallback-section');if(fs)fs.style.display='none';
   document.getElementById('inv-risk-wrap').innerHTML='';
@@ -1087,7 +1107,7 @@ function renderInvSummary(results,filters){
     </div>
     ${spikes.length>0
       ?`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-top:8px;background:rgba(255,0,51,.1);border:1px solid rgba(255,0,51,.25);border-radius:5px;"><span>🚨</span><span style="color:#ff0033;font-size:12px;font-weight:700;">CRITICAL spikes at: ${spikes.join(', ')} — Immediate response recommended.</span></div>`
-      :isFb2
+      :filters.fallback
         ?`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-top:8px;background:rgba(255,170,0,.06);border:1px solid rgba(255,170,0,.2);border-radius:5px;"><span>⚠</span><span style="color:#ffaa00;font-size:12px;">No exact records for this filter. Showing closest related records.</span></div>`
         :`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-top:8px;background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.15);border-radius:5px;"><span>✓</span><span style="color:#00ff88;font-size:12px;">No critical spikes detected. Crowd within acceptable parameters.</span></div>`}`;
 }
@@ -1253,7 +1273,7 @@ function exportSituationReport(){
   <style>body{font-family:Arial,sans-serif;padding:30px;color:#111;}h1{color:#cc0000;}h2{color:#333;border-bottom:2px solid #cc0000;padding-bottom:5px;}table{width:100%;border-collapse:collapse;margin-top:10px;}th{background:#cc0000;color:#fff;padding:8px 12px;text-align:left;}td{padding:7px 12px;border-bottom:1px solid #ddd;}.critical{color:#cc0000;font-weight:700;}.high{color:#cc6600;font-weight:700;}.footer{margin-top:30px;font-size:11px;color:#888;border-top:1px solid #ddd;padding-top:10px;}</style></head>
   <body>
   <h1>🚨 BENTE ANALYTICS — SITUATION REPORT</h1>
-  <p><strong>CompStat 360 · Public Safety Intelligence Platform</strong><br/>Generated: ${now}<br/>Authorized Law Enforcement Use Only</p>
+  <p><strong>Public Safety Intelligence Platform</strong><br/>Generated: ${now}<br/>Authorized Law Enforcement Use Only</p>
   <h2>OPERATIONAL SUMMARY</h2>
   <table><tr><td><strong>Critical Venues</strong></td><td class="critical">${critV} venues requiring immediate response</td></tr>
   <tr><td><strong>High Risk Venues</strong></td><td class="high">${highV} venues requiring monitoring</td></tr>
@@ -1263,7 +1283,7 @@ function exportSituationReport(){
   <table><tr><th>#</th><th>Venue</th><th>Category</th><th>Zone</th><th>Risk Level</th><th>Crowd Level</th><th>Officer Action</th></tr>
   ${top10.map((v,i)=>`<tr><td>${i+1}</td><td>${v.n}</td><td>${v.cat}</td><td>${v.zone}</td><td class="${v.topFlag.toLowerCase()}">${v.topFlag}</td><td>${v.avgD>=85?'OVERCROWDED':v.avgD>=70?'VERY BUSY':v.avgD>=50?'BUSY':'MODERATE'}</td><td>${{'CRITICAL':'Immediate Response','HIGH':'Monitor Closely','ELEVATED':'Routine Patrol','NORMAL':'No Action'}[v.topFlag]}</td></tr>`).join('')}
   </table>
-  <div class="footer">Bente Analytics · CompStat 360 · Public Safety Intelligence · ${now}</div>
+  <div class="footer">Bente Analytics · Public Safety Intelligence · ${now}</div>
   </body></html>`;
   const blob=new Blob([html],{type:'text/html'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -1279,4 +1299,390 @@ function exportPresenceLog(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=`PresenceLog_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();closeSettings();
+}
+/* ════════ WELCOME PAGE ════════ */
+function renderWelcome(){
+  // Clock
+  const updateClock=()=>{
+    const now=new Date();
+    set('welcome-clock',now.toLocaleTimeString('en-US',{hour12:false}));
+    set('welcome-date',now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}));
+    const h=now.getHours();
+    if(h>=6&&h<12){set('welcome-shift','Morning Shift');set('welcome-shift-sub','06:00 — 14:00');}
+    else if(h>=12&&h<18){set('welcome-shift','Afternoon Shift');set('welcome-shift-sub','14:00 — 22:00');}
+    else if(h>=18&&h<24){set('welcome-shift','Evening Shift — ⚠ Peak Activity');set('welcome-shift-sub','22:00 — 06:00');document.getElementById('welcome-shift').style.color='#ff3355';}
+    else{set('welcome-shift','Night Shift');set('welcome-shift-sub','22:00 — 06:00');}
+  };
+  updateClock();setInterval(updateClock,1000);
+
+  // Operational summary
+  const critV=new Set(allData.filter(d=>d.incident_flag==='CRITICAL').map(d=>d.venue_name)).size;
+  const highV=new Set(allData.filter(d=>d.incident_flag==='HIGH').map(d=>d.venue_name)).size;
+  const zm={};allData.forEach(d=>{if(!zm[d.patrol_zone])zm[d.patrol_zone]={crit:0};if(d.incident_flag==='CRITICAL'||d.incident_flag==='HIGH')zm[d.patrol_zone].crit++;});
+  const topZone=Object.entries(zm).sort((a,b)=>b[1].crit-a[1].crit)[0];
+
+  const sumEl=document.getElementById('welcome-summary');
+  if(sumEl)sumEl.innerHTML=`
+    <div style="text-align:center;padding:12px;background:rgba(255,0,51,.08);border:1px solid rgba(255,0,51,.2);border-radius:8px;">
+      <div style="font-family:var(--disp);font-size:32px;font-weight:700;color:#ff0033;">${critV}</div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--t2);margin-top:4px;">Critical Venues</div>
+      <div style="font-size:10px;color:var(--t3);">Immediate Response</div>
+    </div>
+    <div style="text-align:center;padding:12px;background:rgba(255,51,85,.06);border:1px solid rgba(255,51,85,.2);border-radius:8px;">
+      <div style="font-family:var(--disp);font-size:32px;font-weight:700;color:#ff3355;">${highV}</div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--t2);margin-top:4px;">High Risk Venues</div>
+      <div style="font-size:10px;color:var(--t3);">Monitor Closely</div>
+    </div>
+    <div style="text-align:center;padding:12px;background:rgba(255,170,0,.06);border:1px solid rgba(255,170,0,.2);border-radius:8px;">
+      <div style="font-family:var(--disp);font-size:20px;font-weight:700;color:#ffaa00;">${topZone?topZone[0].split('—')[0].trim():'—'}</div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--t2);margin-top:4px;">Highest Risk Zone</div>
+      <div style="font-size:10px;color:var(--t3);">${topZone?topZone[1].crit+' critical events':''}</div>
+    </div>`;
+
+  const recEl=document.getElementById('welcome-recommendation');
+  if(recEl)recEl.innerHTML=`<span style="color:var(--cyan);font-weight:700;">Recommended Action:</span> Review Situation Report for ${critV} critical venues requiring immediate response. Deploy additional patrol resources to ${topZone?topZone[0].split('—')[0].trim():'active zones'} between 9PM and 11PM. Check Live Heatmap for current hotspot locations.`;
+}
+
+/* ════════ EVENTS MONITORING ════════ */
+function resetEvents(){['ev-county','ev-city','ev-zone','ev-cat','ev-risk'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderEvents();}
+
+function renderEvents(){
+  // Populate dropdowns
+  const countyEl=document.getElementById('ev-county');
+  if(countyEl&&countyEl.options.length<=1)[...new Set(allData.map(d=>d.county))].sort().forEach(c=>countyEl.add(new Option(c,c)));
+  const cityEl=document.getElementById('ev-city');
+  if(cityEl&&cityEl.options.length<=1)[...new Set(allData.map(d=>d.city))].sort().forEach(c=>cityEl.add(new Option(c,c)));
+  const zoneEl=document.getElementById('ev-zone');
+  if(zoneEl&&zoneEl.options.length<=1)[...new Set(allData.map(d=>d.patrol_zone))].sort().forEach(z=>zoneEl.add(new Option(z,z)));
+  const catEl=document.getElementById('ev-cat');
+  if(catEl&&catEl.options.length<=1)[...new Set(allData.map(d=>d.event_category))].sort().forEach(c=>catEl.add(new Option(c,c)));
+
+  const county=v('ev-county'),city=v('ev-city'),zone=v('ev-zone'),cat=v('ev-cat'),risk=v('ev-risk');
+  const data=allData.filter(d=>{
+    if(county&&d.county!==county)return false;
+    if(city&&d.city!==city)return false;
+    if(zone&&d.patrol_zone!==zone)return false;
+    if(cat&&d.event_category!==cat)return false;
+    if(risk&&d.event_risk_level!==risk)return false;
+    return true;
+  });
+
+  // KPIs
+  const evKpi=document.getElementById('ev-kpis');
+  if(evKpi){
+    const highRisk=data.filter(d=>d.event_risk_level==='HIGH').length;
+    const largeEvents=data.filter(d=>d.event_size==='Large').length;
+    const uniqueVenues=new Set(data.map(d=>d.venue_name)).size;
+    const uniqueEvents=new Set(data.map(d=>d.event_name)).size;
+    evKpi.innerHTML=`
+      <div class="kpi" style="--kc:#ff0033;--kb:rgba(255,0,51,.1)"><div class="kpi-ico">🚨</div><div><div class="kpi-lbl">High Risk Events</div><div class="kpi-val" style="color:#ff0033;">${highRisk.toLocaleString()}</div><div class="kpi-sub">Require officer monitoring</div></div></div>
+      <div class="kpi" style="--kc:#ffaa00;--kb:rgba(255,170,0,.1)"><div class="kpi-ico">📅</div><div><div class="kpi-lbl">Large Events</div><div class="kpi-val" style="color:#ffaa00;">${largeEvents.toLocaleString()}</div><div class="kpi-sub">High attendance expected</div></div></div>
+      <div class="kpi" style="--kc:#00c8ff;--kb:rgba(0,200,255,.1)"><div class="kpi-ico">🏢</div><div><div class="kpi-lbl">Venues with Events</div><div class="kpi-val">${uniqueVenues.toLocaleString()}</div><div class="kpi-sub">${data.length.toLocaleString()} total records</div></div></div>
+      <div class="kpi" style="--kc:#00ff88;--kb:rgba(0,255,136,.1)"><div class="kpi-ico">🎭</div><div><div class="kpi-lbl">Event Types</div><div class="kpi-val" style="color:#00ff88;">${uniqueEvents.toLocaleString()}</div><div class="kpi-sub">Active event categories</div></div></div>`;
+  }
+
+  // Table
+  const sorted=[...data].sort((a,b)=>{const o={'High':0,'Medium':1,'Low':2,'Minimal':3};return(o[a.event_risk_level]||3)-(o[b.event_risk_level]||3)||b.crowd_density-a.crowd_density;}).slice(0,50);
+  set('ev-count',sorted.length+' events shown');
+  const riskCol={'High':'#ff0033','Medium':'#ff3355','Low':'#ffaa00','Minimal':'#00ff88'};
+  const clLabel=d=>d.crowd_density>=85?'OVERCROWDED':d.crowd_density>=70?'VERY BUSY':d.crowd_density>=50?'BUSY':'MODERATE';
+  document.getElementById('ev-tbody').innerHTML=sorted.map(d=>`<tr>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-weight:600;">${d.event_name}</td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--t2);">${d.event_category}</td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);">${d.venue_name}</td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--t2);">${d.city}</td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:#9b59ff;font-size:11px;">${d.patrol_zone.split('—')[0].trim()}</td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--t2);">${d.event_size}</td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-family:monospace;font-size:11px;">${d.event_start_time}–${d.event_end_time}</td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-weight:700;color:${FLAG_COL[d.incident_flag]};">${clLabel(d)}</td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;background:${riskCol[d.event_risk_level]}22;color:${riskCol[d.event_risk_level]};">${d.event_risk_level}</span></td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);color:${FLAG_COL[d.incident_flag]};font-size:11px;font-weight:600;">${d.officer_action}</td>
+    <td style="padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);">
+      <span style="font-size:10px;color:var(--cyan);cursor:pointer;margin-right:8px;" onclick="focusVenueOnMap('${d.venue_name.replace(/'/g,"\\'")}')">🗺 Map</span>
+      <span style="font-size:10px;color:#ff3355;cursor:pointer;" onclick="goInvestigate('${d.venue_name.replace(/'/g,"\\'")}')">⊘ Investigate</span>
+    </td>
+  </tr>`).join('');
+}
+
+/* ════════ AI AGENT ════════ */
+function submitAI(){const q=document.getElementById('ai-input')?.value?.trim();if(!q)return;askAI(q);document.getElementById('ai-input').value='';}
+function clearAI(){const el=document.getElementById('ai-messages');if(el)el.innerHTML='<div class="ai-msg ai-msg-system"><div style="font-size:20px;margin-bottom:8px;">🤖</div><div style="font-size:13px;">Conversation cleared. Ask me anything, Officer Martinez.</div></div>';}
+
+function askAI(question){
+  const el=document.getElementById('ai-messages');if(!el)return;
+  // Add user message
+  const uDiv=document.createElement('div');uDiv.className='ai-msg ai-msg-user';
+  uDiv.innerHTML=`<div style="font-size:12px;color:var(--t3);margin-bottom:4px;">Officer Martinez</div><div style="font-size:13px;">${question}</div>`;
+  el.appendChild(uDiv);
+
+  // Generate response
+  setTimeout(()=>{
+    const response=generateAIResponse(question.toLowerCase());
+    const rDiv=document.createElement('div');rDiv.className='ai-msg ai-msg-response';
+    rDiv.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:16px;">🤖</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);">Operational Assistant</span></div>${response}`;
+    el.appendChild(rDiv);
+    el.scrollTop=el.scrollHeight;
+  },400);
+  el.scrollTop=el.scrollHeight;
+}
+
+function generateAIResponse(q){
+  const critVenues=allData.filter(d=>d.incident_flag==='CRITICAL');
+  const highVenues=allData.filter(d=>d.incident_flag==='HIGH');
+  const zm={};allData.forEach(d=>{if(!zm[d.patrol_zone])zm[d.patrol_zone]={crit:0,high:0};if(d.incident_flag==='CRITICAL')zm[d.patrol_zone].crit++;if(d.incident_flag==='HIGH')zm[d.patrol_zone].high++;});
+  const topZone=Object.entries(zm).sort((a,b)=>b[1].crit-a[1].crit)[0];
+  const topCritVenues=[...new Set(critVenues.map(d=>d.venue_name))].slice(0,3);
+  const topHighVenues=[...new Set(highVenues.map(d=>d.venue_name))].slice(0,3);
+  const hcnt={};allData.forEach(d=>{hcnt[d.hour_of_day]=(hcnt[d.hour_of_day]||0)+1;});
+  const pkH=Object.entries(hcnt).sort((a,b)=>b[1]-a[1])[0];
+
+  // Pattern matching
+  if(q.includes('attention')||q.includes('tonight')||q.includes('locations')||q.includes('need')){
+    return `<div style="font-size:13px;line-height:1.8;">
+      <div style="font-weight:700;color:#ff0033;margin-bottom:8px;">🚨 Locations Requiring Immediate Attention</div>
+      <div style="margin-bottom:6px;"><span style="color:#ff0033;font-weight:700;">Critical:</span> ${topCritVenues.join(', ')}</div>
+      <div style="margin-bottom:12px;"><span style="color:#ff3355;font-weight:700;">High Risk:</span> ${topHighVenues.join(', ')}</div>
+      <div style="padding:10px 12px;background:rgba(0,200,255,.06);border-left:3px solid var(--cyan);border-radius:4px;font-size:12px;">
+        <span style="color:var(--cyan);font-weight:700;">Recommended Action:</span> Deploy additional patrol resources to ${topZone?topZone[0].split('—')[0].trim():'active zones'} between ${pkH?fmtH(+pkH[0]):'9PM'} and ${pkH?fmtH((+pkH[0]+2)%24):'11PM'}.
+      </div>
+    </div>`;
+  }
+
+  if(q.includes('zone')||q.includes('patrol')){
+    const zoneList=Object.entries(zm).sort((a,b)=>b[1].crit-a[1].crit).slice(0,3);
+    return `<div style="font-size:13px;line-height:1.8;">
+      <div style="font-weight:700;color:#ffaa00;margin-bottom:8px;">📍 Patrol Zone Assessment</div>
+      ${zoneList.map(([zone,stats],i)=>`<div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--bg3);border-radius:5px;margin-bottom:5px;"><span>${i===0?'🔴':'🟠'} ${zone.split('—')[0].trim()}</span><span style="color:${i===0?'#ff0033':'#ff3355'};font-weight:700;">${stats.crit} critical · ${stats.high} high</span></div>`).join('')}
+      <div style="margin-top:10px;padding:10px 12px;background:rgba(0,200,255,.06);border-left:3px solid var(--cyan);border-radius:4px;font-size:12px;">
+        <span style="color:var(--cyan);font-weight:700;">Recommended Action:</span> Assign additional patrol coverage to ${topZone?topZone[0].split('—')[0].trim():'Zone B'} immediately.
+      </div>
+    </div>`;
+  }
+
+  if(q.includes('event')||q.includes('crowd')||q.includes('density')||q.includes('driving')){
+    const evData=allData.filter(d=>d.incident_flag==='CRITICAL'||d.incident_flag==='HIGH');
+    const evCounts={};evData.forEach(d=>{evCounts[d.event_name]=(evCounts[d.event_name]||0)+1;});
+    const topEvents=Object.entries(evCounts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    const catCounts={};evData.forEach(d=>{catCounts[d.event_category]=(catCounts[d.event_category]||0)+1;});
+    const topCat=Object.entries(catCounts).sort((a,b)=>b[1]-a[1])[0];
+    return `<div style="font-size:13px;line-height:1.8;">
+      <div style="font-weight:700;color:#ffaa00;margin-bottom:8px;">🎭 Events Driving Crowd Activity</div>
+      <div style="margin-bottom:8px;">Top events contributing to elevated crowd conditions:</div>
+      ${topEvents.map(([name,cnt])=>`<div style="padding:5px 10px;background:var(--bg3);border-radius:5px;margin-bottom:4px;display:flex;justify-content:space-between;"><span>${name}</span><span style="color:#ffaa00;">${cnt} incidents</span></div>`).join('')}
+      <div style="margin-top:10px;padding:10px 12px;background:rgba(0,200,255,.06);border-left:3px solid var(--cyan);border-radius:4px;font-size:12px;">
+        <span style="color:var(--cyan);font-weight:700;">Recommended Action:</span> ${topCat?topCat[0]+' events':'Nightlife events'} are the primary driver. Increase monitoring at ${topCritVenues[0]||'high-risk venues'} during peak attendance periods.
+      </div>
+    </div>`;
+  }
+
+  // County-specific query — "I work for Hudson County, what's the peak hour..."
+  const countyMatch = q.match(/([a-z]+)\s+county/i);
+  if(countyMatch || q.includes('hudson')||q.includes('jersey')||q.includes('bergen')||q.includes('essex')){
+    const allCounties=[...new Set(allData.map(d=>d.county))];
+    const targetCounty=countyMatch
+      ? allCounties.find(c=>c.toLowerCase().startsWith(countyMatch[1].toLowerCase()))
+      : allCounties.find(c=>c.toLowerCase().includes('hudson'))||allCounties[0];
+    const cd=allData.filter(d=>d.county===targetCounty);
+    const cVm={};cd.forEach(d=>{if(!cVm[d.venue_name])cVm[d.venue_name]=[];cVm[d.venue_name].push(d.incident_flag);});
+    const ord={'CRITICAL':4,'HIGH':3,'ELEVATED':2,'NORMAL':1};
+    const cVenues=Object.entries(cVm).map(([n,flags])=>({n,topFlag:flags.sort((a,b)=>ord[b]-ord[a])[0]||'NORMAL'}));
+    const critV=cVenues.filter(v=>v.topFlag==='CRITICAL');
+    const highV=cVenues.filter(v=>v.topFlag==='HIGH');
+    const chm={};cd.forEach(d=>{chm[d.hour_of_day]=(chm[d.hour_of_day]||0)+1;});
+    const cPk=Object.entries(chm).sort((a,b)=>b[1]-a[1])[0];
+    const czm={};cd.forEach(d=>{if(!czm[d.patrol_zone])czm[d.patrol_zone]={crit:0,high:0};if(d.incident_flag==='CRITICAL')czm[d.patrol_zone].crit++;if(d.incident_flag==='HIGH')czm[d.patrol_zone].high++;});
+    const cTopZone=Object.entries(czm).sort((a,b)=>b[1].crit-a[1].crit)[0];
+    return `<div style="font-size:13px;line-height:1.8;">
+      <div style="font-weight:700;color:#00c8ff;margin-bottom:8px;">📍 ${targetCounty} — Operational Summary</div>
+      <div style="margin-bottom:6px;">Peak Hour: <span style="color:#ff0033;font-weight:700;">${cPk?fmtH(+cPk[0]):'10PM'}</span> (${cPk?cPk[1]:0} check-ins recorded)</div>
+      <div style="margin-bottom:6px;"><span style="color:#ff0033;font-weight:700;">Critical Venues:</span> ${critV.length}</div>
+      <div style="margin-bottom:6px;"><span style="color:#ff3355;font-weight:700;">High-Risk Venues:</span> ${highV.length}</div>
+      <div style="margin-bottom:12px;">Highest concentration of critical activity: <span style="color:#9b59ff;font-weight:700;">${cTopZone?cTopZone[0]:'Zone D — Waterfront'}</span></div>
+      <div style="padding:10px 12px;background:rgba(0,200,255,.06);border-left:3px solid var(--cyan);border-radius:4px;font-size:12px;">
+        <span style="color:var(--cyan);font-weight:700;">Recommended Action:</span> Deploy additional patrol resources to ${cTopZone?cTopZone[0]:'Zone D — Waterfront'} before ${cPk?fmtH(+cPk[0]):'10PM'}. Focus on Bar/Lounge and Nightclub venues during peak hours.
+      </div>
+    </div>`;
+  }
+
+
+  // Default response
+  return `<div style="font-size:13px;line-height:1.8;">
+    <div style="font-weight:700;color:var(--t1);margin-bottom:8px;">Operational Status</div>
+    <div style="margin-bottom:10px;">Here is the current city-wide situation:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="padding:8px 12px;background:rgba(255,0,51,.08);border-radius:6px;"><div style="font-size:20px;font-weight:700;color:#ff0033;">${new Set(critVenues.map(d=>d.venue_name)).size}</div><div style="font-size:10px;color:var(--t2);">Critical Venues</div></div>
+      <div style="padding:8px 12px;background:rgba(255,51,85,.06);border-radius:6px;"><div style="font-size:20px;font-weight:700;color:#ff3355;">${new Set(highVenues.map(d=>d.venue_name)).size}</div><div style="font-size:10px;color:var(--t2);">High Risk Venues</div></div>
+    </div>
+    <div style="padding:10px 12px;background:rgba(0,200,255,.06);border-left:3px solid var(--cyan);border-radius:4px;font-size:12px;">
+      <span style="color:var(--cyan);font-weight:700;">Recommended Action:</span> Review Situation Report for current priority venues. Try asking: "What locations need attention?" or "Which zone needs officers?"
+    </div>
+  </div>`;
+}
+
+/* ════════ UPDATE showPage for new pages ════════ */
+const _origShowPage=showPage;
+
+
+/* ════════ AI OPERATIONAL ASSISTANT ════════ */
+const OFFICER_NAME = 'Officer Martinez'; // Easy to update
+
+function initAiAgent(){
+  const msgs = document.getElementById('ai-messages');
+  if(!msgs || msgs.children.length > 0) return;
+  addAiMessage('bot', `Good evening, ${OFFICER_NAME}. I have access to the full operational dataset — 12,000 check-ins across 300 venues in Hudson County, New Jersey.<br/><br/>How can I assist with your deployment tonight?`);
+}
+
+function addAiMessage(type, text){
+  const msgs = document.getElementById('ai-messages');
+  if(!msgs) return;
+  const div = document.createElement('div');
+  div.className = type === 'user' ? 'ai-msg-user' : 'ai-msg-bot';
+  const avatar = type === 'user'
+    ? `<div class="ai-user-avatar">OM</div>`
+    : `<div class="ai-avatar">🤖</div>`;
+  const bubble = type === 'user'
+    ? `<div class="ai-bubble-user">${text}</div>`
+    : `<div class="ai-bubble-bot"><div style="font-family:var(--mono);font-size:9px;color:var(--cyan);margin-bottom:6px;letter-spacing:.06em;">AI OPERATIONAL ASSISTANT</div>${text}</div>`;
+  div.innerHTML = type === 'user' ? bubble + avatar : avatar + bubble;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendAiMessage(){
+  const input = document.getElementById('ai-input');
+  if(!input || !input.value.trim()) return;
+  const q = input.value.trim();
+  input.value = '';
+  addAiMessage('user', q);
+  setTimeout(() => addAiMessage('bot', processAiQuery(q)), 500);
+}
+
+function askSuggestion(el){
+  const q = el.textContent;
+  const input = document.getElementById('ai-input');
+  if(input) input.value = q;
+  sendAiMessage();
+}
+
+function clearAI(){
+  const msgs = document.getElementById('ai-messages');
+  if(msgs) msgs.innerHTML = '';
+  initAiAgent();
+}
+
+function processAiQuery(q){
+  const ql = q.toLowerCase();
+  const d = allData;
+  const ord = {'CRITICAL':4,'HIGH':3,'ELEVATED':2,'NORMAL':1};
+
+  // Build venue summaries
+  const vm = {};
+  d.forEach(r => {
+    if(!vm[r.venue_name]) vm[r.venue_name] = {zone:r.patrol_zone, city:r.city, cat:r.venue_category, flags:[], dens:[], events:[]};
+    vm[r.venue_name].flags.push(r.incident_flag);
+    vm[r.venue_name].dens.push(r.crowd_density);
+    vm[r.venue_name].events.push(r.event_name);
+  });
+  const venues = Object.entries(vm).map(([n,v]) => ({
+    n, zone:v.zone, city:v.city, cat:v.cat,
+    avgD: avg(v.dens),
+    topFlag: v.flags.sort((a,b)=>ord[b]-ord[a])[0]||'NORMAL',
+    topEvent: v.events[0]||''
+  })).sort((a,b) => ord[b.topFlag]-ord[a.topFlag] || b.avgD-a.avgD);
+
+  // Zone summaries
+  const zm = {};
+  d.forEach(r => {
+    if(!zm[r.patrol_zone]) zm[r.patrol_zone] = {crit:0, high:0, total:0};
+    zm[r.patrol_zone].total++;
+    if(r.incident_flag==='CRITICAL') zm[r.patrol_zone].crit++;
+    if(r.incident_flag==='HIGH') zm[r.patrol_zone].high++;
+  });
+  const topZone = Object.entries(zm).sort((a,b)=>b[1].crit-a[1].crit)[0];
+
+  // Peak hour
+  const hm = {};
+  d.forEach(r => { hm[r.hour_of_day] = (hm[r.hour_of_day]||0)+1; });
+  const pkH = Object.entries(hm).sort((a,b)=>b[1]-a[1])[0];
+
+  // ── Query matching ──
+
+  // Critical venues / attention tonight
+  if(ql.includes('critical') || ql.includes('attention') || ql.includes('tonight') || ql.includes('locations')) {
+    const crit = venues.filter(v=>v.topFlag==='CRITICAL').slice(0,5);
+    const topZ = topZone ? topZone[0].replace(' — ',' — ') : 'Unknown';
+    return `<b>Venues Requiring Immediate Attention</b><br/><br/>
+<b style="color:#ff0033;">🚨 Critical:</b><br/>${crit.map(v=>`• ${v.n} — ${v.zone.split('—')[0].trim()} (${v.city})`).join('<br/>')}<br/><br/>
+<b>Recommended Action:</b><br/>Deploy additional patrol resources to <b style="color:#ff3355;">${topZ.split('—')[0].trim()}</b> between <b>${pkH?fmtH(+pkH[0]):'9PM'}</b> and <b>${pkH?fmtH((+pkH[0]+2)%24):'11PM'}</b>.`;
+  }
+
+  // Patrol zone
+  if(ql.includes('zone') || ql.includes('patrol') || ql.includes('deploy')) {
+    const topZ = topZone ? topZone[0] : 'Zone A';
+    const zName = topZ.split('—')[0].trim();
+    const zStats = topZone ? topZone[1] : {crit:0,high:0};
+    return `<b>Patrol Zone Analysis</b><br/><br/>
+<b style="color:#ff0033;">${zName}</b> currently has the highest concentration of Critical venues.<br/><br/>
+• Critical events: <b style="color:#ff0033;">${zStats.crit}</b><br/>
+• High-risk events: <b style="color:#ff3355;">${zStats.high}</b><br/><br/>
+<b>Recommended Action:</b><br/>Assign additional patrol coverage to <b>${zName}</b> between <b>${pkH?fmtH(+pkH[0]):'9PM'}</b> and <b>${pkH?fmtH((+pkH[0]+2)%24):'11PM'}</b>.`;
+  }
+
+  // Events / crowd drivers
+  if(ql.includes('event') || ql.includes('crowd') || ql.includes('density') || ql.includes('driving')) {
+    const cm = {};
+    d.forEach(r => { if(!cm[r.event_category]) cm[r.event_category]={crit:0,total:0}; cm[r.event_category].total++; if(r.incident_flag==='CRITICAL') cm[r.event_category].crit++; });
+    const topCat = Object.entries(cm).sort((a,b)=>b[1].crit-a[1].crit)[0];
+    const topEvVenues = venues.filter(v=>v.cat==='Nightclub'||v.cat==='Bar/Lounge'||v.cat==='Sports Bar').slice(0,3);
+    return `<b>Crowd Density Drivers</b><br/><br/>
+<b style="color:#ffaa00;">${topCat?topCat[0]:'Nightlife'} events</b> are the primary driver of elevated crowd conditions.<br/><br/>
+Top contributing venues:<br/>${topEvVenues.map(v=>`• <b>${v.n}</b> — ${v.topEvent} (${v.zone.split('—')[0].trim()})`).join('<br/>')}<br/><br/>
+<b>Recommended Action:</b><br/>Increase monitoring at Nightclub and Bar/Lounge venues during peak attendance periods.`;
+  }
+
+  // Peak risk window
+  if(ql.includes('peak') || ql.includes('window') || ql.includes('time') || ql.includes('when')) {
+    return `<b>Peak Risk Window</b><br/><br/>
+Highest foot traffic expected between <b style="color:#ff0033;">${pkH?fmtH(+pkH[0]):'9PM'}</b> and <b style="color:#ff0033;">${pkH?fmtH((+pkH[0]+2)%24):'11PM'}</b>.<br/><br/>
+• ${pkH?pkH[1]:0} check-ins recorded during peak hour<br/>
+• Nightclubs and Bars/Lounges are highest risk<br/>
+• Zone B has highest concentration of incidents<br/><br/>
+<b>Recommended Action:</b><br/>Deploy officers to priority venues before <b>${pkH?fmtH(+pkH[0]):'9PM'}</b>.`;
+  }
+
+  // Specific zone query e.g. "Zone B"
+  const zoneMatch = q.match(/Zone\s+([A-J])/i);
+  if(zoneMatch) {
+    const zKey = `Zone ${zoneMatch[1].toUpperCase()}`;
+    const zVenues = venues.filter(v=>v.zone.startsWith(zKey)).slice(0,5);
+    const zFull = Object.keys(zm).find(z=>z.startsWith(zKey)) || zKey;
+    const zStats = zm[zFull] || {crit:0,high:0};
+    return `<b>${zFull} — Operational Summary</b><br/><br/>
+Critical venues: <b style="color:#ff0033;">${zStats.crit}</b><br/>
+High-risk venues: <b style="color:#ff3355;">${zStats.high}</b><br/><br/>
+<b>Top venues in ${zKey}:</b><br/>${zVenues.map(v=>`• <b>${v.n}</b> — <span style="color:${FLAG_COL[v.topFlag]}">${v.topFlag}</span>`).join('<br/>')}<br/><br/>
+<b>Recommended Action:</b><br/>${zStats.crit>5?'Deploy immediate response resources to this zone.':zStats.high>10?'Monitor closely — elevated activity detected.':'Routine patrol sufficient for current conditions.'}`;
+  }
+
+  // Venue specific
+  const venueMatch = venues.find(v=>v.n.toLowerCase().includes(ql.split(' ').filter(w=>w.length>3)[0]||''));
+  if(venueMatch) {
+    const vRecs = d.filter(r=>r.venue_name===venueMatch.n);
+    const uniqUsers = new Set(vRecs.map(r=>r.user_id)).size;
+    return `<b>${venueMatch.n} — Intelligence Report</b><br/><br/>
+Zone: <b style="color:#9b59ff;">${venueMatch.zone}</b><br/>
+City: <b>${venueMatch.city}</b><br/>
+Risk Level: <b style="color:${FLAG_COL[venueMatch.topFlag]}">${venueMatch.topFlag}</b><br/>
+Avg Crowd Level: <b>${venueMatch.avgD.toFixed(0)}%</b><br/>
+People on record: <b style="color:#00c8ff;">${uniqUsers} individuals</b><br/>
+Active event: <b>${venueMatch.topEvent}</b><br/><br/>
+<b>Recommended Action:</b><br/>${{'CRITICAL':'Immediate Response — deploy officers now.','HIGH':'Monitor Closely — increase patrol frequency.','ELEVATED':'Routine Patrol — standard monitoring.','NORMAL':'No Action Required.'}[venueMatch.topFlag]}`;
+  }
+
+  // Default
+  const topCrit = venues.filter(v=>v.topFlag==='CRITICAL').slice(0,3);
+  return `<b>Operational Overview — Hudson County</b><br/><br/>
+Current status: <b style="color:#ff0033;">${venues.filter(v=>v.topFlag==='CRITICAL').length} Critical</b> · <b style="color:#ff3355;">${venues.filter(v=>v.topFlag==='HIGH').length} High Risk</b> venues<br/><br/>
+<b>Top priority venues:</b><br/>${topCrit.map(v=>`• <b>${v.n}</b> — ${v.zone.split('—')[0].trim()}`).join('<br/>')}<br/><br/>
+<b>Recommended Action:</b><br/>Review Situation Report for full operational picture. Deploy resources to ${topZone?topZone[0].split('—')[0].trim():'Zone B'} between ${pkH?fmtH(+pkH[0]):'9PM'} and ${pkH?fmtH((+pkH[0]+2)%24):'11PM'}.`;
 }

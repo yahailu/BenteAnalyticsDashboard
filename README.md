@@ -1,8 +1,8 @@
-# Bente Analytics — CompStat 360 Public Safety Dashboard
+# Bente Analytics — Public Safety Dashboard
 
 ## Overview
 
-Bente Analytics is a public safety operational intelligence dashboard designed to support crowd monitoring, hotspot identification, resource allocation, predictive forecasting, and incident investigation.
+Bente Analytics is a public safety operational intelligence dashboard designed to support crowd monitoring, hotspot identification, resource allocation, predictive forecasting, event monitoring, and incident investigation.
 
 The dashboard is intended for pilot deployment with local Police Departments and hospitality partners.
 
@@ -22,16 +22,27 @@ If browser security restrictions prevent local data loading, run the project usi
 ## Project Files
 
 | File                        | Description                       |
-| --------------------------- | --------------------------------- |
-| index.html                  | Main dashboard application        |
-| style.css                   | Dashboard styling and layout      |
-| script.js                   | Dashboard functionality and logic |
-| data.js                     | Operational dataset               |
-| bente_city_master_12000.csv | Master dataset                    |
+| --------------------------- | ---------------------------------- |
+| index.html                  | Main dashboard application         |
+| style.css                   | Dashboard styling and layout       |
+| script.js                   | Dashboard functionality and logic  |
+| data.js                     | Operational dataset                |
+| bente_city_master_12000.csv | Master dataset                     |
 
 ---
 
 ## Dashboard Modules
+
+### Home
+
+Officer landing page providing a quick operational snapshot.
+
+Includes:
+
+* Officer greeting and jurisdiction
+* Current time and shift status
+* Operational summary (critical/high-risk venues, zone alerts)
+* Quick navigation to all dashboard modules
 
 ### Situation Report
 
@@ -45,6 +56,7 @@ Includes:
 * Peak activity periods
 * Recommended officer actions
 * Priority watch list
+* Geographic filters — County, City, Zone
 
 ### Live Heatmap
 
@@ -79,17 +91,41 @@ Includes:
 * Presence log
 * Timeline analysis
 * Officer intelligence summaries
+* Geographic filters — County, City
+
+### Events Monitoring
+
+Identifies events driving crowd density at venues.
+
+Includes:
+
+* Active event listings
+* Event category, size, and time window
+* Crowd density and risk level per event
+* Geographic filters — County, City, Zone, Event Type, Risk Level
+* Direct links to map and investigation
+
+### AI Agent
+
+Operational assistant for natural language queries.
+
+Includes:
+
+* Plain-language operational questions
+* Zone, county, and venue-specific responses
+* Suggested questions for quick access
+* Recommended officer actions based on live dataset
 
 ---
 
 ## Risk Levels
 
 | Level    | Recommended Action |
-| -------- | ------------------ |
-| Critical | Immediate Response |
-| High     | Monitor Closely    |
-| Elevated | Routine Patrol     |
-| Normal   | No Action Required |
+| -------- | ------------------- |
+| Critical | Immediate Response   |
+| High     | Monitor Closely      |
+| Elevated | Routine Patrol       |
+| Normal   | No Action Required   |
 
 ---
 

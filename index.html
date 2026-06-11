@@ -15,11 +15,14 @@
 <!-- SIDEBAR -->
 <aside id="sidebar">
   <div class="sb-logo" style="cursor:default;">B</div>
-  <div class="sb-icon active" id="sbi-sitrep"        onclick="showPage('sitrep')">        🚨<span class="sb-tooltip">Situation Report</span></div>
-  <div class="sb-icon"        id="sbi-heatmap"        onclick="showPage('heatmap')">       🔴<span class="sb-tooltip">Live Heatmap</span></div>
-  <div class="sb-icon"        id="sbi-trends"         onclick="showPage('trends')">        ≋<span class="sb-tooltip">Trends & Forecast</span></div>
+  <div class="sb-icon active"  id="sbi-welcome"       onclick="showPage('welcome')">       🏠<span class="sb-tooltip">Home</span></div>
+  <div class="sb-icon" id="sbi-sitrep"   onclick="showPage('sitrep')">        🚨<span class="sb-tooltip">Situation Report</span></div>
+  <div class="sb-icon"        id="sbi-heatmap"  onclick="showPage('heatmap')">       🔴<span class="sb-tooltip">Live Heatmap</span></div>
+  <div class="sb-icon"        id="sbi-trends"   onclick="showPage('trends')">        ≋<span class="sb-tooltip">Trends & Forecast</span></div>
   <div class="sb-sep"></div>
-  <div class="sb-icon"        id="sbi-investigation"  onclick="showPage('investigation')"> ⊘<span class="sb-tooltip">Investigation</span></div>
+  <div class="sb-icon"        id="sbi-investigation" onclick="showPage('investigation')">⊘<span class="sb-tooltip">Investigation</span></div>
+  <div class="sb-icon"        id="sbi-events"   onclick="showPage('events')">        📅<span class="sb-tooltip">Events Monitoring</span></div>
+  <div class="sb-icon"        id="sbi-ai"       onclick="showPage('ai')">            🤖<span class="sb-tooltip">AI Agent</span></div>
   <div class="sb-bottom">
     <div class="sb-icon" onclick="openSettings()" style="cursor:pointer;color:#00c8ff;border-color:rgba(0,200,255,.25);background:rgba(0,200,255,.06);">🖨<span class="sb-tooltip">Export Report</span></div>
   </div>
@@ -32,10 +35,13 @@
     <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-top:1px;">Public Safety Intelligence</div>
   </div>
   <nav class="nav-tabs">
-    <button class="nav-tab active" id="nt-sitrep"       onclick="showPage('sitrep')">       🚨 SITUATION REPORT</button>
-    <button class="nav-tab"        id="nt-heatmap"      onclick="showPage('heatmap')">      🔴 LIVE HEATMAP</button>
-    <button class="nav-tab"        id="nt-trends"       onclick="showPage('trends')">       ≋ TRENDS & FORECAST</button>
-    <button class="nav-tab"        id="nt-investigation" onclick="showPage('investigation')">⊘ INVESTIGATION</button>
+    <button class="nav-tab active" id="nt-welcome"      onclick="showPage('welcome')">      🏠 HOME</button>
+    <button class="nav-tab" id="nt-sitrep" onclick="showPage('sitrep')">      🚨 SITUATION REPORT</button>
+    <button class="nav-tab" id="nt-heatmap"      onclick="showPage('heatmap')">      🔴 LIVE HEATMAP</button>
+    <button class="nav-tab" id="nt-trends"       onclick="showPage('trends')">       ≋ TRENDS & FORECAST</button>
+    <button class="nav-tab" id="nt-investigation" onclick="showPage('investigation')">⊘ INVESTIGATION</button>
+    <button class="nav-tab" id="nt-events"       onclick="showPage('events')">       📅 EVENTS</button>
+    <button class="nav-tab" id="nt-ai"           onclick="showPage('ai')">           🤖 AI AGENT</button>
   </nav>
   <div class="nav-right">
     <div class="live-badge"><div class="live-dot"></div>LIVE</div>
@@ -46,16 +52,17 @@
 <main id="main">
 
 <!-- ══ SITUATION REPORT ══ -->
-<section id="page-sitrep" class="page std-page active">
+<section id="page-sitrep" class="page std-page">
   <div class="pg-header">
     <div>
       <h1 class="pg-title">Situation Report</h1>
-      <p class="pg-sub">CompStat 360 · Real-time crowd intelligence · Officer deployment guide · Authorized Law Enforcement use</p>
+      <p class="pg-sub">Real-time crowd intelligence · Officer deployment guide · Authorized Law Enforcement use</p>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-      <select class="ctrl" id="sr-zone" onchange="renderSitrep()"><option value="">All Zones</option></select>
-      <select class="ctrl" id="sr-cat"  onchange="renderSitrep()"><option value="">All Categories</option></select>
-      <select class="ctrl" id="sr-flag" onchange="renderSitrep()">
+      <select class="ctrl" id="sr-county" onchange="renderSitrep()"><option value="">All Counties</option></select>
+      <select class="ctrl" id="sr-city"   onchange="renderSitrep()"><option value="">All Cities</option></select>
+      <select class="ctrl" id="sr-zone"   onchange="renderSitrep()"><option value="">All Zones</option></select>
+      <select class="ctrl" id="sr-flag"   onchange="renderSitrep()">
         <option value="">All Risk Levels</option>
         <option value="CRITICAL">🔴 Critical</option>
         <option value="HIGH">🟠 High</option>
@@ -197,6 +204,8 @@
 
   <div class="filter-bar">
     <span style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);">Investigate:</span>
+    <select class="ctrl" id="inv-county"><option value="">All Counties</option></select>
+    <select class="ctrl" id="inv-city"><option value="">All Cities</option></select>
     <select class="ctrl" id="inv-venue"  style="min-width:180px;"><option value="">All Venues</option></select>
     <select class="ctrl" id="inv-zone">  <option value="">All Zones</option></select>
     <select class="ctrl" id="inv-day">   <option value="">All Days</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select>
@@ -259,6 +268,153 @@
   </div>
 </section>
 
+<!-- ══ WELCOME PAGE ══ -->
+<section id="page-welcome" class="page std-page active">
+  <div style="max-width:900px;margin:0 auto;padding:20px 0;">
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">● BENTE ANALYTICS · PUBLIC SAFETY INTELLIGENCE PLATFORM</div>
+      <h1 style="font-family:var(--disp);font-size:36px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Welcome, <span style="color:var(--cyan)" id="officer-name">Officer Martinez</span></h1>
+      <div style="font-size:13px;color:var(--t2);">Authorized Law Enforcement Use Only</div>
+    </div>
+    <!-- Status cards -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;">
+      <div class="panel" style="text-align:center;">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">JURISDICTION</div>
+        <div style="font-family:var(--disp);font-size:18px;font-weight:700;color:var(--t1);">Hudson County</div>
+        <div style="font-size:11px;color:var(--t2);">New Jersey</div>
+      </div>
+      <div class="panel" style="text-align:center;">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">CURRENT TIME</div>
+        <div style="font-family:var(--disp);font-size:24px;font-weight:700;color:var(--cyan);" id="welcome-clock">--:--:--</div>
+        <div style="font-size:11px;color:var(--t2);" id="welcome-date">--</div>
+      </div>
+      <div class="panel" style="text-align:center;">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">SHIFT STATUS</div>
+        <div style="font-family:var(--disp);font-size:16px;font-weight:700;" id="welcome-shift">--</div>
+        <div style="font-size:11px;color:var(--t2);" id="welcome-shift-sub">--</div>
+      </div>
+    </div>
+    <!-- Operational Summary -->
+    <div class="panel" style="margin-bottom:28px;background:rgba(255,0,51,.04);border-color:rgba(255,0,51,.2);">
+      <div class="panel-header">
+        <div class="panel-title"><div class="ptdot" style="background:#ff0033;"></div>Operational Summary</div>
+        <span style="font-family:var(--mono);font-size:9px;color:var(--t3);">Current city-wide status</span>
+      </div>
+      <div id="welcome-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;"></div>
+      <div id="welcome-recommendation" style="margin-top:14px;padding:12px 14px;background:rgba(0,200,255,.06);border:1px solid var(--bdr2);border-radius:7px;font-size:12px;color:var(--t1);line-height:1.6;"></div>
+    </div>
+    <!-- Navigation cards -->
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:12px;">Navigate to</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div class="welcome-nav-card" onclick="showPage('sitrep')" style="--wc:#ff0033;">
+        <div class="wnc-icon">🚨</div>
+        <div class="wnc-title">Situation Report</div>
+        <div class="wnc-sub">Current venue risk & officer actions</div>
+      </div>
+      <div class="welcome-nav-card" onclick="showPage('heatmap')" style="--wc:#ff3355;">
+        <div class="wnc-icon">🔴</div>
+        <div class="wnc-title">Live Heatmap</div>
+        <div class="wnc-sub">Real-time crowd density map</div>
+      </div>
+      <div class="welcome-nav-card" onclick="showPage('trends')" style="--wc:#00c8ff;">
+        <div class="wnc-icon">≋</div>
+        <div class="wnc-title">Trends & Forecast</div>
+        <div class="wnc-sub">Deployment planning & predictions</div>
+      </div>
+      <div class="welcome-nav-card" onclick="showPage('investigation')" style="--wc:#9b59ff;">
+        <div class="wnc-icon">⊘</div>
+        <div class="wnc-title">Investigation</div>
+        <div class="wnc-sub">Venue presence lookup</div>
+      </div>
+      <div class="welcome-nav-card" onclick="showPage('events')" style="--wc:#ffaa00;">
+        <div class="wnc-icon">📅</div>
+        <div class="wnc-title">Events Monitoring</div>
+        <div class="wnc-sub">Events driving crowd activity</div>
+      </div>
+      <div class="welcome-nav-card" onclick="showPage('ai')" style="--wc:#00ff88;">
+        <div class="wnc-icon">🤖</div>
+        <div class="wnc-title">AI Agent</div>
+        <div class="wnc-sub">Ask operational questions</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ EVENTS MONITORING ══ -->
+<section id="page-events" class="page std-page">
+  <div class="pg-header">
+    <div>
+      <h1 class="pg-title">Events Monitoring</h1>
+      <p class="pg-sub">What events are driving crowd activity · Which venues have large events · Risk assessment by event</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select class="ctrl" id="ev-county" onchange="renderEvents()"><option value="">All Counties</option></select>
+      <select class="ctrl" id="ev-city"   onchange="renderEvents()"><option value="">All Cities</option></select>
+      <select class="ctrl" id="ev-zone"  onchange="renderEvents()"><option value="">All Zones</option></select>
+      <select class="ctrl" id="ev-cat"   onchange="renderEvents()"><option value="">All Event Types</option></select>
+      <select class="ctrl" id="ev-risk"  onchange="renderEvents()">
+        <option value="">All Risk Levels</option>
+        <option value="CRITICAL">🔴 Critical</option>
+        <option value="HIGH">🟠 High</option>
+        <option value="ELEVATED">🟡 Elevated</option>
+        <option value="NORMAL">🟢 Normal</option>
+      </select>
+      <button class="btn-ghost" onclick="resetEvents()">Reset</button>
+    </div>
+  </div>
+  <div class="kpi-row" id="ev-kpis"></div>
+  <div class="panel" style="margin-bottom:14px;">
+    <div class="panel-header">
+      <div class="panel-title"><div class="ptdot" style="background:#ffaa00;"></div>Active Events — Driving Crowd Density</div>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--t3);" id="ev-count"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th>Event Name</th><th>Category</th><th>Venue</th><th>City</th><th>Zone</th>
+          <th>Size</th><th>Time</th><th>Crowd Level</th><th>Risk</th><th>Officer Action</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="ev-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══ AI AGENT ══ -->
+<section id="page-ai" class="page std-page">
+  <div class="pg-header">
+    <div>
+      <h1 class="pg-title">AI Operational Assistant</h1>
+      <p class="pg-sub">Ask operational questions · Get actionable intelligence · Powered by venue data</p>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--t3);">Rule-based · Dataset-driven · Prototype</div>
+  </div>
+  <!-- Chat interface -->
+  <div style="max-width:800px;margin:0 auto;">
+    <div id="ai-messages" style="min-height:400px;max-height:500px;overflow-y:auto;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px;margin-bottom:14px;display:flex;flex-direction:column;gap:12px;">
+      <div class="ai-msg ai-msg-system">
+        <div style="font-size:20px;margin-bottom:8px;">🤖</div>
+        <div style="font-size:13px;line-height:1.6;">Hello, <strong>Officer Martinez</strong>. I am your operational assistant. Ask me about venues, patrol zones, crowd conditions, or events in your jurisdiction.<br/><br/>
+        <span style="color:var(--t3);font-size:11px;">Try: "What locations need attention tonight?" or "Which zone needs the most officers?" or "What events are driving crowd density?"</span></div>
+      </div>
+    </div>
+    <!-- Quick questions -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+      <button class="ai-quick-btn" onclick="askAI('What locations need attention tonight?')">What locations need attention tonight?</button>
+      <button class="ai-quick-btn" onclick="askAI('Which zone needs the most officers?')">Which zone needs the most officers?</button>
+      <button class="ai-quick-btn" onclick="askAI('What events are driving crowd density?')">What events are driving crowd density?</button>
+      <button class="ai-quick-btn" onclick="askAI('Show me critical venues in Hudson County')">Critical venues in Hudson County</button>
+    </div>
+    <!-- Input -->
+    <div style="display:flex;gap:10px;">
+      <input id="ai-input" class="ctrl" style="flex:1;padding:10px 14px;font-size:13px;" placeholder="Ask an operational question..." onkeydown="if(event.key==='Enter')submitAI()"/>
+      <button class="btn-pri" onclick="submitAI()">▶ Ask</button>
+      <button class="btn-ghost" onclick="clearAI()">Clear</button>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <!-- SETTINGS / EXPORT MODAL -->
@@ -278,7 +434,7 @@
     <div style="border-top:1px solid var(--bdr);padding-top:16px;margin-bottom:16px;">
       <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">System Info</div>
       <div style="font-size:11px;color:var(--t2);line-height:1.8;">
-        <div>Platform: <span style="color:var(--t1);">CompStat 360 · Bente Analytics</span></div>
+        <div>Platform: <span style="color:var(--t1);">Bente Analytics</span></div>
         <div>Dataset: <span style="color:var(--t1);">12,000 records · 300 venues · 10 patrol zones</span></div>
         <div>Status: <span style="color:var(--green);">● LIVE · Authorized Law Enforcement Use Only</span></div>
       </div>
